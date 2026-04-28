@@ -1,0 +1,43 @@
+<div class="min-h-screen">
+  <nav class="fixed top-0 w-full z-50 glass border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center gap-3"><div class="w-9 h-9 bg-gradient-to-br from-primary-500 to-accent-600 rounded-xl flex items-center justify-center"><i class="ri-shield-keyhole-fill text-white text-lg"></i></div><span class="text-xl font-bold text-gray-900">{{appName}}</span></div>
+        <div class="hidden md:flex items-center gap-6"><a href="#features" class="text-sm text-gray-600 hover:text-gray-900">Características</a><a href="#pricing" class="text-sm text-gray-600 hover:text-gray-900">Precios</a><a href="/admin/login" class="px-4 py-2 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700">Acceder</a></div>
+      </div>
+    </div>
+  </nav>
+  <section class="pt-32 pb-20 bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-primary-50 text-primary-700 rounded-full text-sm font-medium mb-6"><i class="ri-rocket-2-line"></i> Plataforma de Licencias v1.0</div>
+      <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 mb-6">Gestión de Licencias<br><span class="bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-accent-600">Inteligente y Segura</span></h1>
+      <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-10">Administra licencias, vincula dispositivos, procesa pagos y protege tu producto con encriptación empresarial.</p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="/payments/checkout?plan=annual" class="w-full sm:w-auto px-8 py-3.5 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 shadow-lg">Comenzar PRO - ${{priceAnnual}}/año</a>
+        <a href="/admin/login" class="w-full sm:w-auto px-8 py-3.5 bg-white text-gray-700 rounded-xl font-semibold border border-gray-200 hover:bg-gray-50">Panel Admin <i class="ri-arrow-right-line ml-1"></i></a>
+      </div>
+    </div>
+  </section>
+  <section id="features" class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4"><div class="text-center mb-16"><h2 class="text-3xl font-bold text-gray-900 mb-4">Todo lo que necesitas</h2></div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="p-6 rounded-2xl bg-gray-50 hover:shadow-lg transition-all"><div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4"><i class="ri-key-2-fill text-blue-600 text-2xl"></i></div><h3 class="text-lg font-semibold mb-2">Licencias Seguras</h3><p class="text-gray-600 text-sm">RSA 2048-bit con certificados digitales.</p></div>
+        <div class="p-6 rounded-2xl bg-gray-50 hover:shadow-lg transition-all"><div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4"><i class="ri-computer-fill text-purple-600 text-2xl"></i></div><h3 class="text-lg font-semibold mb-2">Vinculación de Dispositivo</h3><p class="text-gray-600 text-sm">Una licencia por dispositivo con migración.</p></div>
+        <div class="p-6 rounded-2xl bg-gray-50 hover:shadow-lg transition-all"><div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-4"><i class="ri-bank-card-fill text-green-600 text-2xl"></i></div><h3 class="text-lg font-semibold mb-2">Múltiples Pagos</h3><p class="text-gray-600 text-sm">Stripe, PayPal y Bitcoin.</p></div>
+        <div class="p-6 rounded-2xl bg-gray-50 hover:shadow-lg transition-all"><div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mb-4"><i class="ri-shield-check-fill text-orange-600 text-2xl"></i></div><h3 class="text-lg font-semibold mb-2">API REST</h3><p class="text-gray-600 text-sm">Verificación en tiempo real.</p></div>
+        <div class="p-6 rounded-2xl bg-gray-50 hover:shadow-lg transition-all"><div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-4"><i class="ri-map-pin-line text-red-600 text-2xl"></i></div><h3 class="text-lg font-semibold mb-2">Rastreo Geográfico</h3><p class="text-gray-600 text-sm">IP, país y ciudad en cada acceso.</p></div>
+        <div class="p-6 rounded-2xl bg-gray-50 hover:shadow-lg transition-all"><div class="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center mb-4"><i class="ri-lock-unlock-line text-teal-600 text-2xl"></i></div><h3 class="text-lg font-semibold mb-2">Desbloqueo Remoto</h3><p class="text-gray-600 text-sm">Códigos dinámicos por email.</p></div>
+      </div>
+    </div>
+  </section>
+  <section id="pricing" class="py-20 bg-gray-50">
+    <div class="max-w-5xl mx-auto px-4"><div class="text-center mb-16"><h2 class="text-3xl font-bold text-gray-900 mb-4">Precios</h2></div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="bg-white rounded-2xl border border-gray-200 p-8"><span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-semibold">FREE</span><div class="my-6"><span class="text-4xl font-extrabold">$0</span><span class="text-gray-500">/siempre</span></div><ul class="space-y-2 mb-8 text-sm text-gray-600"><li><i class="ri-check-line text-green-500"></i> Licencia básica</li><li><i class="ri-check-line text-green-500"></i> 1 dispositivo</li></ul><a href="/payments/checkout?plan=free" class="block w-full text-center py-3 border border-gray-300 rounded-xl font-semibold hover:bg-gray-50">Gratis</a></div>
+        <div class="bg-white rounded-2xl border-2 border-primary-500 p-8 relative shadow-lg"><div class="absolute -top-4 left-1/2 -translate-x-1/2"><span class="px-4 py-1 bg-primary-600 text-white rounded-full text-sm font-semibold">Popular</span></div><span class="px-3 py-1 bg-primary-50 text-primary-700 rounded-full text-sm font-semibold">PRO Mensual</span><div class="my-6"><span class="text-4xl font-extrabold">${{priceMonthly}}</span><span class="text-gray-500">/mes</span></div><ul class="space-y-2 mb-8 text-sm text-gray-600"><li><i class="ri-check-line text-green-500"></i> Todo PRO</li><li><i class="ri-check-line text-green-500"></i> Encriptación avanzada</li><li><i class="ri-check-line text-green-500"></i> Soporte prioritario</li></ul><a href="/payments/checkout?plan=monthly" class="block w-full text-center py-3 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700">Suscribirse</a></div>
+        <div class="bg-white rounded-2xl border border-gray-200 p-8"><span class="px-3 py-1 bg-accent-50 text-accent-700 rounded-full text-sm font-semibold">PRO Anual</span><div class="my-6"><span class="text-4xl font-extrabold">${{priceAnnual}}</span><span class="text-gray-500">/año</span></div><span class="text-sm text-green-600 font-semibold">Ahorra $35/año</span><ul class="space-y-2 my-4 mb-8 text-sm text-gray-600"><li><i class="ri-check-line text-green-500"></i> Todo PRO</li><li><i class="ri-check-line text-green-500"></i> Renovación automática</li></ul><a href="/payments/checkout?plan=annual" class="block w-full text-center py-3 bg-accent-600 text-white rounded-xl font-semibold hover:bg-accent-700">Suscribirse</a></div>
+      </div>
+    </div>
+  </section>
+  {{> footer}}
+</div>
