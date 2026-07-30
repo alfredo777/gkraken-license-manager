@@ -7,18 +7,20 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css">
-  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif']},colors:{primary:{50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',300:'#93c5fd',400:'#60a5fa',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8',800:'#1e40af',900:'#1e3a8a'},accent:{50:'#f5f3ff',100:'#ede9fe',200:'#ddd6fe',300:'#c4b5fd',400:'#a78bfa',500:'#8b5cf6',600:'#7c3aed',700:'#6d28d9',800:'#5b21b6',900:'#4c1d95'}}}}}</script>
+  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif']},colors:{primary:{50:'#ecfdf5',100:'#d1fae5',200:'#a7f3d0',300:'#6ee7b7',400:'#34d399',500:'#2DD4A8',600:'#059669',700:'#047857',800:'#065f46',900:'#064e3b'},accent:{50:'#eef2ff',100:'#e0e7ff',200:'#c7d2fe',300:'#a5b4fc',400:'#818cf8',500:'#6366F1',600:'#4f46e5',700:'#4338ca',800:'#3730a3',900:'#312e81'}}}}}</script>
   <style>
-    *{scrollbar-width:thin;scrollbar-color:#cbd5e1 transparent}
-    ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
-    .sidebar-link.active{background:rgba(59,130,246,0.1);color:#3b82f6;border-right:3px solid #3b82f6}
+    *{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.1) transparent}
+    ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.2)}
+    .sidebar-link.active{background:rgba(45,212,168,0.1);color:#2DD4A8;border-right:3px solid #2DD4A8}
     .fade-in{animation:fadeIn .3s ease-in}
     @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-    .glass{background:rgba(255,255,255,0.8);backdrop-filter:blur(10px)}
+    .glass{background:rgba(255,255,255,0.03);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.06)}
+    .glass-card{background:rgba(255,255,255,0.03);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.06);border-radius:1rem}
+    body{background:#0a0a0f}
   </style>
   {{#if stripePublishableKey}}<script src="https://js.stripe.com/v3/"></script>{{/if}}
 </head>
-<body class="h-full bg-gray-50 font-sans">
+<body class="h-full font-sans text-gray-200" style="background:#0a0a0f">
   {{#if isLanding}}{{{body}}}{{else}}
     {{#if admin}}
       <div class="flex h-full">
@@ -26,16 +28,16 @@
         <div class="flex-1 flex flex-col overflow-hidden">
           {{> navbar}}
           <main class="flex-1 overflow-y-auto p-4 md:p-6 fade-in">
-            {{#if success_msg}}{{#each success_msg}}<div class="mb-4 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800 flex items-center gap-2"><i class="ri-check-line text-lg"></i> {{this}}<button onclick="this.parentElement.remove()" class="ml-auto text-green-600"><i class="ri-close-line"></i></button></div>{{/each}}{{/if}}
-            {{#if error_msg}}{{#each error_msg}}<div class="mb-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800 flex items-center gap-2"><i class="ri-error-warning-line text-lg"></i> {{this}}<button onclick="this.parentElement.remove()" class="ml-auto text-red-600"><i class="ri-close-line"></i></button></div>{{/each}}{{/if}}
+            {{#if success_msg}}{{#each success_msg}}<div class="mb-4 p-4 rounded-lg bg-emerald-900/30 border border-emerald-700/40 text-emerald-300 flex items-center gap-2"><i class="ri-check-line text-lg"></i> {{this}}<button onclick="this.parentElement.remove()" class="ml-auto text-emerald-400 hover:text-emerald-200"><i class="ri-close-line"></i></button></div>{{/each}}{{/if}}
+            {{#if error_msg}}{{#each error_msg}}<div class="mb-4 p-4 rounded-lg bg-red-900/30 border border-red-700/40 text-red-300 flex items-center gap-2"><i class="ri-error-warning-line text-lg"></i> {{this}}<button onclick="this.parentElement.remove()" class="ml-auto text-red-400 hover:text-red-200"><i class="ri-close-line"></i></button></div>{{/each}}{{/if}}
             {{{body}}}
           </main>
         </div>
       </div>
     {{else}}
       <div class="min-h-full">
-        {{#if success_msg}}{{#each success_msg}}<div class="mx-4 mt-4 p-4 rounded-lg bg-green-50 border border-green-200 text-green-800"><i class="ri-check-line"></i> {{this}}</div>{{/each}}{{/if}}
-        {{#if error_msg}}{{#each error_msg}}<div class="mx-4 mt-4 p-4 rounded-lg bg-red-50 border border-red-200 text-red-800"><i class="ri-error-warning-line"></i> {{this}}</div>{{/each}}{{/if}}
+        {{#if success_msg}}{{#each success_msg}}<div class="mx-4 mt-4 p-4 rounded-lg bg-emerald-900/30 border border-emerald-700/40 text-emerald-300"><i class="ri-check-line"></i> {{this}}</div>{{/each}}{{/if}}
+        {{#if error_msg}}{{#each error_msg}}<div class="mx-4 mt-4 p-4 rounded-lg bg-red-900/30 border border-red-700/40 text-red-300"><i class="ri-error-warning-line"></i> {{this}}</div>{{/each}}{{/if}}
         {{{body}}}
       </div>
     {{/if}}

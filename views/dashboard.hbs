@@ -1,16 +1,469 @@
 <div class="space-y-6">
+
+  <!-- Stat Cards Row -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-    <div class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-500">Total Licencias</p><p class="text-2xl font-bold text-gray-900 mt-1">{{stats.totalLicenses}}</p></div><div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center"><i class="ri-key-2-fill text-blue-600 text-xl"></i></div></div><div class="mt-3 flex items-center gap-2 text-xs"><span class="text-green-600 font-semibold">{{stats.activeLicenses}} activas</span><span class="text-gray-300">|</span><span class="text-red-500">{{stats.expiredLicenses}} expiradas</span></div></div>
-    <div class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-500">Licencias PRO</p><p class="text-2xl font-bold text-purple-700 mt-1">{{stats.proLicenses}}</p></div><div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center"><i class="ri-vip-crown-fill text-purple-600 text-xl"></i></div></div><div class="mt-3 text-xs text-gray-500">{{stats.freeLicenses}} free</div></div>
-    <div class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-500">Ingresos Mes</p><p class="text-2xl font-bold text-green-700 mt-1">${{stats.monthlyRevenue}}</p></div><div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center"><i class="ri-money-dollar-circle-fill text-green-600 text-xl"></i></div></div><div class="mt-3 text-xs text-gray-500">Total: ${{stats.totalPayments}}</div></div>
-    <div class="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-500">Dispositivos</p><p class="text-2xl font-bold text-gray-900 mt-1">{{stats.totalDevices}}</p></div><div class="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center"><i class="ri-computer-fill text-orange-600 text-xl"></i></div></div><div class="mt-3 text-xs"><span class="text-orange-600 font-semibold">{{stats.expiringSoon}} expiran pronto</span></div></div>
-  </div>
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <div class="lg:col-span-1 bg-white rounded-xl border border-gray-200 p-6"><h3 class="text-lg font-semibold text-gray-900 mb-4">Acciones Rápidas</h3>
-      <a href="/dashboard/licenses/create" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 mb-2"><div class="w-10 h-10 bg-primary-50 rounded-lg flex items-center justify-center"><i class="ri-add-circle-line text-primary-600"></i></div><div><p class="text-sm font-medium">Nueva Licencia</p></div></a>
-      <a href="/dashboard/licenses?status=expired" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 mb-2"><div class="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center"><i class="ri-time-line text-red-600"></i></div><div><p class="text-sm font-medium">Licencias Expiradas</p></div></a>
-      <a href="/dashboard/access-logs" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50"><div class="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center"><i class="ri-file-list-3-line text-amber-600"></i></div><div><p class="text-sm font-medium">Logs ({{stats.totalVerifications}})</p></div></a>
+    <!-- Total Licenses -->
+    <div class="glass-card p-5 hover:border-white/[0.12] transition-colors relative overflow-hidden">
+      <div class="flex items-start justify-between">
+        <div class="flex-1">
+          <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Licencias</p>
+          <p class="text-3xl font-bold text-white mt-2">{{stats.totalLicenses}}</p>
+          <div class="mt-2 flex items-center gap-1.5 text-xs">
+            <span class="flex items-center gap-0.5 text-emerald-400 font-medium"><i class="ri-arrow-up-s-line"></i>{{stats.activeLicenses}} activas</span>
+            <span class="text-gray-600">|</span>
+            <span class="text-red-400">{{stats.expiredLicenses}} expiradas</span>
+          </div>
+        </div>
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background:rgba(59,130,246,0.15)"><i class="ri-key-2-fill text-xl" style="color:#3B82F6"></i></div>
+      </div>
+      <div class="mt-3 h-8" id="sparkline-licenses"></div>
     </div>
-    <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-6"><h3 class="text-lg font-semibold text-gray-900 mb-4">Accesos Recientes</h3><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-left text-xs text-gray-500 uppercase border-b"><th class="pb-3 pr-4">Licencia</th><th class="pb-3 pr-4">Acción</th><th class="pb-3 pr-4">IP</th><th class="pb-3">Fecha</th></tr></thead><tbody>{{#each stats.recentAccess}}<tr class="border-b border-gray-50 hover:bg-gray-50"><td class="py-2.5 pr-4 text-xs font-medium">{{this.license.name}}</td><td class="py-2.5 pr-4"><span class="px-2 py-0.5 text-xs rounded-full bg-gray-100">{{this.action}}</span></td><td class="py-2.5 pr-4 font-mono text-xs text-gray-500">{{this.ip_address}}</td><td class="py-2.5 text-xs text-gray-500">{{formatDateTime this.accessed_at}}</td></tr>{{/each}}</tbody></table></div></div>
+
+    <!-- PRO Licenses -->
+    <div class="glass-card p-5 hover:border-white/[0.12] transition-colors relative overflow-hidden">
+      <div class="flex items-start justify-between">
+        <div class="flex-1">
+          <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Licencias PRO</p>
+          <p class="text-3xl font-bold mt-2" style="color:#6366F1">{{stats.proLicenses}}</p>
+          <div class="mt-2 text-xs text-gray-500">{{stats.freeLicenses}} licencias free activas</div>
+        </div>
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background:rgba(99,102,241,0.15)"><i class="ri-vip-crown-fill text-xl" style="color:#6366F1"></i></div>
+      </div>
+      <div class="mt-3 h-8" id="sparkline-pro"></div>
+    </div>
+
+    <!-- Monthly Revenue -->
+    <div class="glass-card p-5 hover:border-white/[0.12] transition-colors relative overflow-hidden">
+      <div class="flex items-start justify-between">
+        <div class="flex-1">
+          <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Ingresos Mes</p>
+          <p class="text-3xl font-bold mt-2" style="color:#2DD4A8">${{stats.monthlyRevenue}}</p>
+          <div class="mt-2 text-xs text-gray-500">Total acumulado: ${{stats.totalPayments}}</div>
+        </div>
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background:rgba(45,212,168,0.15)"><i class="ri-money-dollar-circle-fill text-xl" style="color:#2DD4A8"></i></div>
+      </div>
+      <div class="mt-3 h-8" id="sparkline-revenue"></div>
+    </div>
+
+    <!-- Devices -->
+    <div class="glass-card p-5 hover:border-white/[0.12] transition-colors relative overflow-hidden">
+      <div class="flex items-start justify-between">
+        <div class="flex-1">
+          <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Dispositivos</p>
+          <p class="text-3xl font-bold text-white mt-2">{{stats.totalDevices}}</p>
+          <div class="mt-2 flex items-center gap-1 text-xs">
+            <span class="text-amber-400 font-medium"><i class="ri-alarm-warning-line"></i> {{stats.expiringSoon}} expiran pronto</span>
+          </div>
+        </div>
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background:rgba(249,115,22,0.15)"><i class="ri-computer-fill text-xl" style="color:#F97316"></i></div>
+      </div>
+      <div class="mt-3 h-8" id="sparkline-devices"></div>
+    </div>
   </div>
+
+  <!-- Charts Row -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <!-- License Analytics Donut Chart -->
+    <div class="lg:col-span-1 glass-card p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-sm font-semibold text-white uppercase tracking-wider">Distribucion de Licencias</h3>
+        <span class="text-[10px] px-2 py-0.5 rounded-full text-emerald-400" style="background:rgba(45,212,168,0.1)">En Vivo</span>
+      </div>
+      <div class="flex items-center justify-center py-2">
+        <div class="relative">
+          <svg id="donut-chart" width="180" height="180" viewBox="0 0 180 180"></svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span class="text-2xl font-bold text-white">{{stats.totalLicenses}}</span>
+            <span class="text-[10px] text-gray-500 uppercase tracking-wider">Total</span>
+          </div>
+        </div>
+      </div>
+      <div class="mt-4 space-y-2.5">
+        <div class="flex items-center justify-between text-sm">
+          <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full" style="background:#2DD4A8"></span><span class="text-gray-400">PRO Activas</span></div>
+          <span class="font-semibold text-white">{{stats.proLicenses}}</span>
+        </div>
+        <div class="flex items-center justify-between text-sm">
+          <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full" style="background:#6366F1"></span><span class="text-gray-400">Free Activas</span></div>
+          <span class="font-semibold text-white">{{stats.freeLicenses}}</span>
+        </div>
+        <div class="flex items-center justify-between text-sm">
+          <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full" style="background:#EF4444"></span><span class="text-gray-400">Expiradas</span></div>
+          <span class="font-semibold text-white">{{stats.expiredLicenses}}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Revenue Trend Chart -->
+    <div class="lg:col-span-1 glass-card p-6">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-sm font-semibold text-white uppercase tracking-wider">Ingresos (7 dias)</h3>
+        <span class="text-[10px] px-2 py-0.5 rounded-full text-indigo-400" style="background:rgba(99,102,241,0.1)">Tendencia</span>
+      </div>
+      <p class="text-2xl font-bold mb-4" style="color:#2DD4A8">${{stats.monthlyRevenue}}</p>
+      <div id="revenue-chart-container" style="height:140px">
+        <svg id="revenue-chart" width="100%" height="140" preserveAspectRatio="none"></svg>
+      </div>
+    </div>
+
+    <!-- Devices Overview -->
+    <div class="lg:col-span-1 glass-card p-6">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-sm font-semibold text-white uppercase tracking-wider">Dispositivos por Plataforma</h3>
+        <span class="text-[10px] px-2 py-0.5 rounded-full text-orange-400" style="background:rgba(249,115,22,0.1)">Estimado</span>
+      </div>
+      <p class="text-2xl font-bold text-white mb-5">{{stats.totalDevices}}<span class="text-xs text-gray-500 ml-2 font-normal">dispositivos activos</span></p>
+      <div id="platform-bars" class="space-y-3"></div>
+    </div>
+  </div>
+
+  <!-- Middle Row: Recent Access + Quick Actions -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <!-- Recent Access Table -->
+    <div class="lg:col-span-2 glass-card p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-sm font-semibold text-white uppercase tracking-wider">Accesos Recientes</h3>
+        <a href="/dashboard/access-logs" class="text-xs text-gray-500 hover:text-emerald-400 transition-colors">Ver todos <i class="ri-arrow-right-s-line"></i></a>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-[10px] text-gray-500 uppercase tracking-wider">
+              <th class="pb-3 pr-4 font-medium">Licencia</th>
+              <th class="pb-3 pr-4 font-medium">Accion</th>
+              <th class="pb-3 pr-4 font-medium">IP</th>
+              <th class="pb-3 font-medium">Fecha</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/[0.04]">
+            {{#each stats.recentAccess}}
+            <tr class="hover:bg-emerald-500/[0.03] transition-colors">
+              <td class="py-3 pr-4">
+                <span class="text-xs font-medium text-gray-300">{{this.license.name}}</span>
+              </td>
+              <td class="py-3 pr-4">
+                <span class="px-2.5 py-1 text-[10px] font-medium rounded-full
+                  {{#ifCond this.action '===' 'verification'}}text-emerald-400{{else}}{{#ifCond this.action '===' 'registration'}}text-indigo-400{{else}}text-amber-400{{/ifCond}}{{/ifCond}}"
+                  style="{{#ifCond this.action '===' 'verification'}}background:rgba(45,212,168,0.1){{else}}{{#ifCond this.action '===' 'registration'}}background:rgba(99,102,241,0.1){{else}}background:rgba(245,158,11,0.1){{/ifCond}}{{/ifCond}}">{{this.action}}</span>
+              </td>
+              <td class="py-3 pr-4 font-mono text-xs text-gray-500">{{this.ip_address}}</td>
+              <td class="py-3 text-xs text-gray-500">{{formatDateTime this.accessed_at}}</td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="lg:col-span-1 glass-card p-6">
+      <h3 class="text-sm font-semibold text-white uppercase tracking-wider mb-5">Acciones Rapidas</h3>
+      <div class="space-y-2">
+        <a href="/dashboard/licenses/create" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.04] transition-colors group">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(45,212,168,0.1)"><i class="ri-add-circle-line text-lg" style="color:#2DD4A8"></i></div>
+          <div><p class="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Nueva Licencia</p><p class="text-[10px] text-gray-600">Crear licencia PRO o Free</p></div>
+        </a>
+        <a href="/dashboard/licenses?status=expired" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.04] transition-colors group">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(239,68,68,0.1)"><i class="ri-time-line text-lg" style="color:#EF4444"></i></div>
+          <div><p class="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Licencias Expiradas</p><p class="text-[10px] text-gray-600">Revisar y renovar</p></div>
+        </a>
+        <a href="/dashboard/access-logs" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.04] transition-colors group">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(245,158,11,0.1)"><i class="ri-file-list-3-line text-lg" style="color:#F59E0B"></i></div>
+          <div><p class="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Logs de Acceso</p><p class="text-[10px] text-gray-600">{{stats.totalVerifications}} verificaciones</p></div>
+        </a>
+        <a href="/dashboard/payments" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.04] transition-colors group">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(99,102,241,0.1)"><i class="ri-bank-card-line text-lg" style="color:#6366F1"></i></div>
+          <div><p class="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Pagos</p><p class="text-[10px] text-gray-600">Historial de pagos</p></div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Row -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <!-- By Country -->
+    <div class="lg:col-span-1 glass-card p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-sm font-semibold text-white uppercase tracking-wider">Por Pais</h3>
+        <i class="ri-global-line text-gray-600"></i>
+      </div>
+      <div id="country-bars" class="space-y-3">
+        {{#each stats.byCountry}}
+        <div>
+          <div class="flex items-center justify-between text-xs mb-1">
+            <span class="text-gray-400">{{this.country}}</span>
+            <span class="text-white font-semibold">{{this.count}}</span>
+          </div>
+          <div class="w-full h-1.5 rounded-full" style="background:rgba(255,255,255,0.06)">
+            <div class="h-1.5 rounded-full country-bar" data-count="{{this.count}}" style="background:linear-gradient(90deg,#2DD4A8,#059669);width:0%;transition:width 1s ease"></div>
+          </div>
+        </div>
+        {{/each}}
+      </div>
+    </div>
+
+    <!-- Expiring Soon Alert -->
+    <div class="lg:col-span-1 glass-card p-6 relative overflow-hidden">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-semibold text-white uppercase tracking-wider">Expiran Pronto</h3>
+        <span class="text-[10px] px-2 py-0.5 rounded-full text-amber-400" style="background:rgba(245,158,11,0.1)">30 dias</span>
+      </div>
+      <div class="flex items-center justify-center py-4">
+        <div class="relative">
+          <svg id="expiring-ring" width="120" height="120" viewBox="0 0 120 120"></svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span class="text-3xl font-bold text-amber-400">{{stats.expiringSoon}}</span>
+            <span class="text-[10px] text-gray-500 uppercase">Licencias</span>
+          </div>
+        </div>
+      </div>
+      <p class="text-center text-xs text-gray-500 mt-2">de {{stats.activeLicenses}} licencias activas</p>
+      <a href="/dashboard/licenses?status=active" class="block mt-4 text-center text-xs py-2 rounded-lg text-amber-400 hover:bg-amber-500/10 transition-colors border border-amber-500/20">
+        <i class="ri-eye-line"></i> Ver detalles
+      </a>
+    </div>
+
+    <!-- By Role -->
+    <div class="lg:col-span-1 glass-card p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-sm font-semibold text-white uppercase tracking-wider">Por Rol</h3>
+        <i class="ri-team-line text-gray-600"></i>
+      </div>
+      <div class="space-y-3">
+        {{#each stats.byRole}}
+        <div class="flex items-center justify-between p-3 rounded-xl" style="background:rgba(255,255,255,0.02)">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(99,102,241,0.1)"><i class="ri-user-3-line text-sm" style="color:#6366F1"></i></div>
+            <span class="text-sm text-gray-300 capitalize">{{this.user_role}}</span>
+          </div>
+          <span class="text-sm font-bold text-white">{{this.count}}</span>
+        </div>
+        {{/each}}
+      </div>
+    </div>
+  </div>
+
 </div>
+
+<!-- Dashboard Charts Script -->
+<script>
+(function() {
+  // Helper: generate smooth random data points
+  function smoothRandom(count, min, max, seed) {
+    var pts = [];
+    var v = min + (max - min) * 0.5;
+    for (var i = 0; i < count; i++) {
+      v += (Math.sin(seed + i * 0.8) * (max - min) * 0.15) + ((Math.random() - 0.5) * (max - min) * 0.1);
+      v = Math.max(min, Math.min(max, v));
+      pts.push(v);
+    }
+    return pts;
+  }
+
+  // Helper: SVG sparkline
+  function drawSparkline(containerId, data, color) {
+    var el = document.getElementById(containerId);
+    if (!el) return;
+    var w = el.offsetWidth || 200;
+    var h = 32;
+    var min = Math.min.apply(null, data);
+    var max = Math.max.apply(null, data);
+    var range = max - min || 1;
+    var points = data.map(function(v, i) {
+      return (i / (data.length - 1)) * w + ',' + (h - ((v - min) / range) * (h - 4) - 2);
+    });
+    var pathD = 'M' + points.join(' L');
+    var areaD = pathD + ' L' + w + ',' + h + ' L0,' + h + ' Z';
+
+    var svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">'
+      + '<defs><linearGradient id="sg-' + containerId + '" x1="0" y1="0" x2="0" y2="1">'
+      + '<stop offset="0%" stop-color="' + color + '" stop-opacity="0.3"/>'
+      + '<stop offset="100%" stop-color="' + color + '" stop-opacity="0"/>'
+      + '</linearGradient></defs>'
+      + '<path d="' + areaD + '" fill="url(#sg-' + containerId + ')"/>'
+      + '<path d="' + pathD + '" fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'
+      + '</svg>';
+    el.innerHTML = svg;
+  }
+
+  // Draw sparklines
+  drawSparkline('sparkline-licenses', smoothRandom(12, 5, 30, 1), '#3B82F6');
+  drawSparkline('sparkline-pro', smoothRandom(12, 2, 20, 3), '#6366F1');
+  drawSparkline('sparkline-revenue', smoothRandom(12, 10, 80, 5), '#2DD4A8');
+  drawSparkline('sparkline-devices', smoothRandom(12, 3, 25, 7), '#F97316');
+
+  // Donut Chart
+  (function() {
+    var svg = document.getElementById('donut-chart');
+    if (!svg) return;
+    var pro = parseInt('{{stats.proLicenses}}') || 0;
+    var free = parseInt('{{stats.freeLicenses}}') || 0;
+    var expired = parseInt('{{stats.expiredLicenses}}') || 0;
+    var total = pro + free + expired;
+    if (total === 0) total = 1;
+
+    var segments = [
+      { value: pro, color: '#2DD4A8' },
+      { value: free, color: '#6366F1' },
+      { value: expired, color: '#EF4444' }
+    ];
+
+    var cx = 90, cy = 90, r = 70, sw = 16;
+    var circumference = 2 * Math.PI * r;
+    var offset = -circumference * 0.25; // start at top
+
+    // Background ring
+    var bg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    bg.setAttribute('cx', cx); bg.setAttribute('cy', cy); bg.setAttribute('r', r);
+    bg.setAttribute('fill', 'none'); bg.setAttribute('stroke', 'rgba(255,255,255,0.04)');
+    bg.setAttribute('stroke-width', sw);
+    svg.appendChild(bg);
+
+    segments.forEach(function(seg) {
+      if (seg.value <= 0) return;
+      var pct = seg.value / total;
+      var dash = pct * circumference;
+      var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', cx); circle.setAttribute('cy', cy); circle.setAttribute('r', r);
+      circle.setAttribute('fill', 'none'); circle.setAttribute('stroke', seg.color);
+      circle.setAttribute('stroke-width', sw);
+      circle.setAttribute('stroke-dasharray', dash + ' ' + (circumference - dash));
+      circle.setAttribute('stroke-dashoffset', -offset);
+      circle.setAttribute('stroke-linecap', 'round');
+      circle.style.transition = 'stroke-dasharray 1s ease, stroke-dashoffset 1s ease';
+      svg.appendChild(circle);
+      offset += dash;
+    });
+  })();
+
+  // Revenue Area Chart
+  (function() {
+    var container = document.getElementById('revenue-chart-container');
+    var svg = document.getElementById('revenue-chart');
+    if (!svg || !container) return;
+
+    var w = container.offsetWidth || 300;
+    var h = 140;
+    svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+
+    var data = smoothRandom(7, 10, 100, 42);
+    var days = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
+    var padL = 0, padR = 0, padT = 10, padB = 24;
+    var cw = w - padL - padR;
+    var ch = h - padT - padB;
+    var min = Math.min.apply(null, data) * 0.8;
+    var max = Math.max.apply(null, data) * 1.1;
+    var range = max - min || 1;
+
+    // Grid lines
+    for (var g = 0; g < 4; g++) {
+      var gy = padT + (ch / 3) * g;
+      var line = '<line x1="' + padL + '" y1="' + gy + '" x2="' + (w - padR) + '" y2="' + gy + '" stroke="rgba(255,255,255,0.04)" stroke-dasharray="4,4"/>';
+      svg.innerHTML += line;
+    }
+
+    var points = data.map(function(v, i) {
+      var x = padL + (i / (data.length - 1)) * cw;
+      var y = padT + ch - ((v - min) / range) * ch;
+      return { x: x, y: y };
+    });
+
+    // Smooth path
+    var pathParts = ['M' + points[0].x + ',' + points[0].y];
+    for (var i = 1; i < points.length; i++) {
+      var cp1x = points[i-1].x + (points[i].x - points[i-1].x) * 0.4;
+      var cp2x = points[i].x - (points[i].x - points[i-1].x) * 0.4;
+      pathParts.push('C' + cp1x + ',' + points[i-1].y + ' ' + cp2x + ',' + points[i].y + ' ' + points[i].x + ',' + points[i].y);
+    }
+    var pathD = pathParts.join(' ');
+    var areaD = pathD + ' L' + points[points.length-1].x + ',' + (h - padB) + ' L' + points[0].x + ',' + (h - padB) + ' Z';
+
+    svg.innerHTML += '<defs><linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">'
+      + '<stop offset="0%" stop-color="#2DD4A8" stop-opacity="0.25"/>'
+      + '<stop offset="100%" stop-color="#2DD4A8" stop-opacity="0"/>'
+      + '</linearGradient></defs>';
+    svg.innerHTML += '<path d="' + areaD + '" fill="url(#revGrad)"/>';
+    svg.innerHTML += '<path d="' + pathD + '" fill="none" stroke="#2DD4A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+
+    // Dots + labels
+    points.forEach(function(p, i) {
+      svg.innerHTML += '<circle cx="' + p.x + '" cy="' + p.y + '" r="3" fill="#0a0a0f" stroke="#2DD4A8" stroke-width="1.5"/>';
+      svg.innerHTML += '<text x="' + p.x + '" y="' + (h - 6) + '" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="9" font-family="Inter,sans-serif">' + days[i] + '</text>';
+    });
+  })();
+
+  // Platform Bars
+  (function() {
+    var container = document.getElementById('platform-bars');
+    if (!container) return;
+    var total = parseInt('{{stats.totalDevices}}') || 1;
+    var platforms = [
+      { name: 'Windows', pct: 45, color: '#3B82F6', icon: 'ri-windows-fill' },
+      { name: 'macOS', pct: 30, color: '#6366F1', icon: 'ri-apple-fill' },
+      { name: 'Linux', pct: 25, color: '#F97316', icon: 'ri-ubuntu-fill' }
+    ];
+    var html = '';
+    platforms.forEach(function(p) {
+      var count = Math.round(total * p.pct / 100);
+      html += '<div>'
+        + '<div class="flex items-center justify-between text-xs mb-1.5">'
+        + '<div class="flex items-center gap-2"><i class="' + p.icon + '" style="color:' + p.color + '"></i><span class="text-gray-400">' + p.name + '</span></div>'
+        + '<span class="text-white font-semibold">' + count + ' <span class="text-gray-600 font-normal">(' + p.pct + '%)</span></span>'
+        + '</div>'
+        + '<div class="w-full h-2 rounded-full" style="background:rgba(255,255,255,0.04)">'
+        + '<div class="h-2 rounded-full" style="background:' + p.color + ';width:' + p.pct + '%;transition:width 1s ease;opacity:0.85"></div>'
+        + '</div></div>';
+    });
+    container.innerHTML = html;
+  })();
+
+  // Country Bars — animate widths
+  (function() {
+    var bars = document.querySelectorAll('.country-bar');
+    if (!bars.length) return;
+    var maxCount = 0;
+    bars.forEach(function(b) {
+      var c = parseInt(b.getAttribute('data-count')) || 0;
+      if (c > maxCount) maxCount = c;
+    });
+    if (maxCount === 0) maxCount = 1;
+    setTimeout(function() {
+      bars.forEach(function(b) {
+        var c = parseInt(b.getAttribute('data-count')) || 0;
+        b.style.width = Math.max((c / maxCount) * 100, 4) + '%';
+      });
+    }, 200);
+  })();
+
+  // Expiring Ring
+  (function() {
+    var svg = document.getElementById('expiring-ring');
+    if (!svg) return;
+    var expiring = parseInt('{{stats.expiringSoon}}') || 0;
+    var active = parseInt('{{stats.activeLicenses}}') || 1;
+    var pct = Math.min(expiring / active, 1);
+
+    var cx = 60, cy = 60, r = 48, sw = 8;
+    var circ = 2 * Math.PI * r;
+
+    // Background
+    var bg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    bg.setAttribute('cx', cx); bg.setAttribute('cy', cy); bg.setAttribute('r', r);
+    bg.setAttribute('fill', 'none'); bg.setAttribute('stroke', 'rgba(255,255,255,0.04)');
+    bg.setAttribute('stroke-width', sw);
+    svg.appendChild(bg);
+
+    // Progress
+    var arc = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    arc.setAttribute('cx', cx); arc.setAttribute('cy', cy); arc.setAttribute('r', r);
+    arc.setAttribute('fill', 'none'); arc.setAttribute('stroke', '#F59E0B');
+    arc.setAttribute('stroke-width', sw);
+    arc.setAttribute('stroke-dasharray', (pct * circ) + ' ' + circ);
+    arc.setAttribute('stroke-dashoffset', circ * 0.25);
+    arc.setAttribute('stroke-linecap', 'round');
+    arc.style.transition = 'stroke-dasharray 1.5s ease';
+    svg.appendChild(arc);
+  })();
+
+})();
+</script>

@@ -1,13 +1,13 @@
-<header class="bg-white border-b border-gray-200 shadow-sm">
+<header class="border-b border-white/[0.06] shadow-lg" style="background:rgba(10,10,18,0.8);backdrop-filter:blur(16px)">
   <div class="flex items-center justify-between px-4 md:px-6 py-3">
     <div class="flex items-center gap-4">
-      <button id="mobile-menu-btn" class="md:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg"><i class="ri-menu-line text-xl"></i></button>
-      <h2 class="text-lg font-semibold text-gray-800">{{title}}</h2>
+      <button id="mobile-menu-btn" class="md:hidden p-2 text-gray-400 hover:bg-white/[0.06] rounded-lg transition-colors"><i class="ri-menu-line text-xl"></i></button>
+      <h2 class="text-lg font-semibold text-white">{{title}}</h2>
     </div>
     <div class="flex items-center gap-3">
-      <a href="/dashboard/licenses/create" class="hidden sm:flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700"><i class="ri-add-line"></i> Nueva Licencia</a>
-      <a href="/" target="_blank" class="p-2 text-gray-500 hover:bg-gray-100 rounded-lg" title="Ver Landing"><i class="ri-external-link-line text-lg"></i></a>
-      <a href="/admin/logout" class="p-2 text-gray-500 hover:bg-red-50 hover:text-red-600 rounded-lg" title="Salir"><i class="ri-logout-box-r-line text-lg"></i></a>
+      <a href="/dashboard/licenses/create" class="hidden sm:flex items-center gap-2 px-4 py-2 text-white text-sm rounded-lg hover:opacity-90 transition-opacity" style="background:linear-gradient(135deg,#2DD4A8,#059669)"><i class="ri-add-line"></i> Nueva Licencia</a>
+      <a href="/" target="_blank" class="p-2 text-gray-400 hover:text-gray-200 hover:bg-white/[0.06] rounded-lg transition-colors" title="Ver Landing"><i class="ri-external-link-line text-lg"></i></a>
+      <a href="/admin/logout" class="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title="Salir"><i class="ri-logout-box-r-line text-lg"></i></a>
     </div>
   </div>
 </header>
