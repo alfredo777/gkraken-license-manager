@@ -2,7 +2,7 @@
 // Todas las rutas van detrás de requireApiKey (cabecera X-API-Key).
 const { License } = require('../models');
 const { getClientIp, getGeoData } = require('../middleware/ipTracker');
-const { getStripe } = require('../utils/stripeClient');
+const { createCheckoutSession } = require('../utils/checkoutSession');
 const { PRICES, CURRENCY, featuresFor } = require('../config/features');
 const { PLAN_TYPES } = require('../utils/applyUpgrade');
 const svc = require('../utils/licenseService');
@@ -74,16 +74,7 @@ exports.checkout = async (req, res) => {
     if (['cancelled', 'suspended'].includes(license.status)) return fail(res, 403, `Licencia ${license.status}.`);
     const amount = PRICES[plan_type];
     const appUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
-    const session = await getStripe().checkout.sessions.create({
-      mode: 'payment',
-      customer_email: license.stripe_customer_id ? undefined : license.email,
-      customer: license.stripe_customer_id || undefined,
-      line_items: [{ quantity: 1, price_data: { currency: CURRENCY.toLowerCase(), unit_amount: Math.round(amount * 100), product_data: { name: `Green Kraken PRO (${plan_type === 'annual' ? 'anual' : 'mensual'})` } } }],
-      metadata: { license_id: String(license.id), plan_type },
-      payment_intent_data: { metadata: { license_id: String(license.id), plan_type, source: 'checkout' } },
-      success_url: `${appUrl}/payments/success`,
-      cancel_url: `${appUrl}/payments/checkout?plan=${plan_type}`
-    });
+    const session = await createCheckoutSession(license, plan_type, { appUrl });
     return res.json({
       success: true, checkout_url: session.url, session_id: session.id, amount, plan_type, currency: CURRENCY,
       expires_at: session.expires_at ? new Date(session.expires_at * 1000).toISOString() : null

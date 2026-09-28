@@ -1,15 +1,12 @@
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 p-4">
-  <div class="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-    {{#if ok}}
-      <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"><i class="ri-check-line text-green-600 text-4xl"></i></div>
-      <h1 class="text-2xl font-bold mb-2">Listo{{#if name}}, {{name}}{{/if}}</h1>
-      <p class="text-gray-600">{{message}}</p>
-      <p class="text-gray-500 text-sm mt-4">Ya puedes cerrar esta pestaña y volver a Green Kraken.</p>
-    {{else}}
-      <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6"><i class="ri-error-warning-line text-red-600 text-4xl"></i></div>
-      <h1 class="text-2xl font-bold mb-2">No se pudo iniciar sesión</h1>
-      <p class="text-gray-600">{{message}}</p>
-      <p class="text-gray-500 text-sm mt-4">Vuelve a Green Kraken e inténtalo de nuevo.</p>
-    {{/if}}
-  </div>
+<div class="gk-caja">
+  <img src="/img/Icon-192.png" alt="" class="gk-caja__logo" width="96" height="96">
+  {{#if ok}}
+    <h1>Listo{{#if name}}, {{name}}{{/if}}</h1>
+    <div class="gk-aviso gk-aviso--ok">{{message}}</div>
+    <p>Ya puedes cerrar esta pestaña y volver a Green Kraken.</p>
+  {{else}}
+    <h1>No se pudo iniciar sesión</h1>
+    <div class="gk-aviso gk-aviso--error" role="alert">{{message}}</div>
+    <p>Vuelve a Green Kraken e inténtalo de nuevo.</p>
+  {{/if}}
 </div>

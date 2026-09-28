@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{{title}}</title>
+  {{#if metaDescription}}<meta name="description" content="{{metaDescription}}">{{/if}}
+  <!-- La barra del navegador sigue al esquema del sistema, igual que la app:
+       sin esto, en móvil aparece una franja blanca sobre una página oscura. -->
+  <meta name="theme-color" content="#010101" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+  <meta name="color-scheme" content="dark light">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <link rel="apple-touch-icon" href="/img/Icon-192.png">
+  <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+  <div class="gk-pagina">
+    {{> site-nav}}
+    <main>{{{body}}}</main>
+    {{> site-footer}}
+  </div>
+</body>
+</html>

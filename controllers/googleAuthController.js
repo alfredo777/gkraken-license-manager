@@ -11,13 +11,14 @@ const { getClientIp, getGeoData } = require('../middleware/ipTracker');
 const google = require('../utils/googleOAuth');
 const svc = require('../utils/licenseService');
 const { migrateDevice } = require('../utils/deviceMigration');
+const account = require('./accountController');
 
 const SESSION_TTL_MS = 10 * 60 * 1000;
 const MODES = ['register', 'migrate'];
 const DEVICE_KEYS = ['device_id', 'device_name', 'device_brand', 'device_model', 'device_os', 'device_os_version', 'device_cpu', 'device_ram', 'device_mac', 'device_board', 'device_disk_id', 'app_version', 'user_role'];
 const sha256 = (v) => crypto.createHash('sha256').update(v).digest('hex');
 const fail = (res, status, message) => res.status(status).json({ success: false, error: message, message });
-const page = (res, status, ok, message, name) => res.status(status).render('auth/done', { layout: 'main', isLanding: true, title: 'Green Kraken', ok, message, name });
+const page = (res, status, ok, message, name) => res.status(status).render('auth/done', { layout: 'site', title: 'Green Kraken', ok, message, name });
 
 // POST /api/v1/auth/google/start
 exports.start = async (req, res) => {
@@ -57,27 +58,17 @@ exports.redirect = async (req, res) => {
 // Resuelve la licencia de la cuenta de Google. Devuelve el cuerpo que recibirá la app.
 const resolveLicense = async (session, profile, ctx) => {
   const device = JSON.parse(session.device_payload);
-  let license = await svc.loadWithDevices({ google_sub: profile.sub });
-  if (!license) {
-    const byEmail = await svc.loadWithDevices({ email: profile.email.toLowerCase() });
-    if (byEmail && byEmail.google_sub && byEmail.google_sub !== profile.sub) {
-      throw Object.assign(new Error('Este email ya está ligado a otra cuenta de Google. Contacta a soporte.'), { expose: true });
-    }
-    if (byEmail) {
-      await byEmail.update({ google_sub: profile.sub, auth_provider: 'google', avatar_url: profile.picture || byEmail.avatar_url });
-      license = byEmail;
-    }
+  if (session.mode === 'migrate') {
+    const license = await svc.findLicenseForGoogle(profile);
+    if (!license) throw svc.exposed('No hay ninguna licencia para esta cuenta de Google.');
+    return linkOrMigrate(session, license, device, ctx);
   }
+  const { license, isNew } = await svc.findOrCreateForGoogle(profile, device, ctx);
+  if (isNew) return { license, body: { success: true, is_new: true, needs_migration: false, message: 'Licencia creada.' } };
+  return linkOrMigrate(session, license, device, ctx);
+};
 
-  if (!license) {
-    if (session.mode === 'migrate') throw Object.assign(new Error('No hay ninguna licencia para esta cuenta de Google.'), { expose: true });
-    const created = await svc.createFreeLicense(
-      { name: profile.name, email: profile.email, google_sub: profile.sub, avatar_url: profile.picture, user_role: device.user_role },
-      device, ctx
-    );
-    return { license: created, body: { success: true, is_new: true, needs_migration: false, message: 'Licencia creada.' } };
-  }
-
+const linkOrMigrate = async (session, license, device, ctx) => {
   const active = (license.devices || []).filter(d => d.is_active);
   if (active.some(d => d.device_id === device.device_id)) {
     return { license, body: { success: true, is_new: false, needs_migration: false, message: 'Este dispositivo ya estaba vinculado.' } };
@@ -98,6 +89,8 @@ const resolveLicense = async (session, profile, ctx) => {
 
 // GET /auth/google/callback (navegador)
 exports.callback = async (req, res) => {
+  // El mismo callback sirve al login de la web (/cuenta), que guarda su state en la sesión.
+  if (account.isWebCallback(req)) return account.finishWebLogin(req, res);
   const session = await pendingByState(req.query.state);
   if (!session) return page(res, 410, false, 'La sesión expiró o ya se usó.');
   const markFailed = (message) => session.update({ status: 'failed', error: String(message).slice(0, 255) });

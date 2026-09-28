@@ -131,7 +131,7 @@ const logAccess = (license, action, ctx, extra = {}) => AccessNode.create({
   action, user_agent: ctx.userAgent, response_status: true, accessed_at: new Date(), ...extra
 });
 
-// Crea una licencia FREE activa y vincula el dispositivo. `profile` trae name,
+// Crea una licencia FREE activa y, si viene `device`, vincula el dispositivo. `profile` trae name,
 // email y opcionalmente phone, country, user_role, google_sub, avatar_url.
 const createFreeLicense = async (profile, device, ctx) => {
   const start = new Date();
@@ -144,13 +144,13 @@ const createFreeLicense = async (profile, device, ctx) => {
     name: clip(profile.name, 255) || profile.email, email: profile.email.trim().toLowerCase(),
     phone: clip(profile.phone, 20), country: clip(profile.country, 100) || ctx.geo?.country, country_code: clip(ctx.geo?.country, 5),
     user_role: role, encryption_key: generateEncryptionKey(), encryption_certificate: cert.certificate,
-    app_version: clip(device.app_version, 20) || '1.0.0', auto_renew: false,
+    app_version: clip(device?.app_version, 20) || '1.0.0', auto_renew: false,
     registration_ip: ctx.ip, registration_country: ctx.geo?.country, registration_city: ctx.geo?.city,
     google_sub: profile.google_sub || null, auth_provider: profile.google_sub ? 'google' : 'manual', avatar_url: clip(profile.avatar_url, 1024),
     max_devices: 1
   });
-  await linkDevice(license, device, ctx);
-  await logAccess(license, 'registration', ctx, { device_id: device.device_id, app_version: clip(device.app_version, 20) });
+  if (device && device.device_id) await linkDevice(license, device, ctx);
+  await logAccess(license, 'registration', ctx, { device_id: device?.device_id || null, app_version: clip(device?.app_version, 20) });
   await sendLicenseInfo(license.email, license.toJSON());
   return license;
 };
@@ -161,7 +161,35 @@ const linkDevice = (license, device, ctx) => Device.create({
 
 const loadWithDevices = (where) => License.findOne({ where, include: [{ model: Device, as: 'devices', required: false }] });
 
+const exposed = (message) => Object.assign(new Error(message), { expose: true });
+
+// Licencia de una cuenta de Google: primero por google_sub; si no, por email
+// (la primera vez se liga la cuenta). Devuelve null si no hay licencia.
+const findLicenseForGoogle = async (profile) => {
+  const bySub = await loadWithDevices({ google_sub: profile.sub });
+  if (bySub) return bySub;
+  const byEmail = await loadWithDevices({ email: profile.email.toLowerCase() });
+  if (!byEmail) return null;
+  if (byEmail.google_sub && byEmail.google_sub !== profile.sub) {
+    throw exposed('Este email ya está ligado a otra cuenta de Google. Contacta a soporte.');
+  }
+  await byEmail.update({ google_sub: profile.sub, auth_provider: 'google', avatar_url: profile.picture || byEmail.avatar_url });
+  return byEmail;
+};
+
+// Busca la licencia de la cuenta o crea una FREE (con o sin dispositivo).
+const findOrCreateForGoogle = async (profile, device, ctx) => {
+  const existing = await findLicenseForGoogle(profile);
+  if (existing) return { license: existing, isNew: false };
+  const created = await createFreeLicense(
+    { name: profile.name, email: profile.email, google_sub: profile.sub, avatar_url: profile.picture, user_role: device?.user_role },
+    device, ctx
+  );
+  return { license: await loadWithDevices({ id: created.id }), isNew: true };
+};
+
 module.exports = {
   USER_ROLES, deviceFieldsFrom, clientStatus, buildLicenseInfo, buildVerifyResponse, renewalPlans,
-  createFreeLicense, linkDevice, loadWithDevices, logAccess, daysRemaining
+  createFreeLicense, linkDevice, loadWithDevices, logAccess, daysRemaining,
+  findLicenseForGoogle, findOrCreateForGoogle, exposed
 };

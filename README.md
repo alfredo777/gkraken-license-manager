@@ -40,7 +40,34 @@ El superadmin se crea al arrancar si no existe ningún admin (o con `npm run see
 
 En producción (`NODE_ENV=production`) el servidor no arranca si `SESSION_SECRET`, `JWT_SECRET` o `API_KEY` faltan, son los valores de ejemplo o tienen menos de 32 caracteres.
 
-## 🐙 Green Kraken
+## 🌐 Sitio web de Green Kraken
+
+Este servidor es también la web pública de Green Kraken: todo lo web vive aquí.
+
+| Ruta | Qué es |
+|------|--------|
+| `/` | Landing (funciones, planes, descargas) |
+| `/cuenta/entrar` | Entrada con Google para usuarios |
+| `/cuenta` | Mi cuenta: licencia, dispositivos (liberar equipo), pasar a PRO, pagos |
+| `/payments/success` | Confirmación después de pagar |
+| `/admin/login`, `/dashboard` | Administración (Monter Labs) |
+
+Si alguien entra por la web y su cuenta de Google no tiene licencia, se crea una FREE sin dispositivo. El equipo se vincula la primera vez que inicia sesión en la app.
+
+Las páginas públicas usan `views/layouts/site.hbs` y `public/css/site.css`, que siguen las reglas de `green-kraken/docs/ESTILOS_WEB.md`:
+- los mismos tokens de color que `GKColors`;
+- oscuro por defecto, con variante clara según el sistema;
+- sin alturas fijas;
+- sin CDNs ni fuentes externas;
+- sin animaciones con `prefers-reduced-motion`.
+
+Los logos de `public/img/` son los optimizados de la cáscara web de la app (`web/brand/marca.png`, `web/icons/*`). El panel de administración conserva su plantilla (`layouts/main.hbs`).
+
+Enlaces de descarga: `DOWNLOAD_URL_WINDOWS`, `DOWNLOAD_URL_MACOS` y `DOWNLOAD_URL_LINUX`. Si una está vacía, esa plataforma muestra "Próximamente".
+
+Detrás de nginx u otro proxy, define `TRUST_PROXY=1`. Sin eso, la cookie de sesión segura no se envía y el login web no funciona en producción.
+
+## 🐙 Green Kraken (app)
 
 Este servidor es el gestor de licencias propio de Green Kraken (Monter Labs AI). La app se compila apuntando aquí:
 
@@ -55,7 +82,7 @@ Genera la clave con `openssl rand -hex 32`. La clave que estuvo publicada en el 
 ### Login con Google (crea la licencia)
 
 1. En Google Cloud Console (proyecto de Monter Labs) → *APIs y servicios → Credenciales* → crear **ID de cliente OAuth** de tipo **Aplicación web**.
-2. URI de redirección autorizado: `https://licencias.tu-dominio.com/auth/google/callback` (o el valor de `GOOGLE_REDIRECT_URI`).
+2. URI de redirección autorizado: `https://licencias.tu-dominio.com/auth/google/callback` (o el valor de `GOOGLE_REDIRECT_URI`). Sirve para la app y para la web.
 3. Configura la pantalla de consentimiento (scopes `openid`, `email`, `profile`).
 4. Copia el ID y el secreto a `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`.
 

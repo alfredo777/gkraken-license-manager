@@ -159,7 +159,7 @@ exports.paymentHistory = async (req, res) => {
   } catch (error) { req.flash('error_msg', 'Error.'); res.redirect('/dashboard'); }
 };
 
-exports.successPage = (req, res) => { res.render('payments/success', { layout: 'main', title: 'Pago Exitoso' }); };
+exports.successPage = (req, res) => { res.render('payments/success', { layout: 'site', title: 'Pago recibido · Green Kraken' }); };
 
 exports.manualPayment = async (req, res) => {
   const isApi = req.originalUrl.startsWith('/api');

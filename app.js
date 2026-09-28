@@ -14,6 +14,9 @@ const path = require('path');
 
 const app = express();
 
+// Detrás de un proxy (nginx, Caddy…) hace falta para cookies seguras y la IP real.
+if (process.env.TRUST_PROXY) app.set('trust proxy', /^\d+$/.test(process.env.TRUST_PROXY) ? Number(process.env.TRUST_PROXY) : process.env.TRUST_PROXY);
+
 app.use(helmet({ contentSecurityPolicy: { directives: { defaultSrc: ["'self'"], scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.tailwindcss.com", "https://js.stripe.com", "https://www.paypal.com", "https://cdn.jsdelivr.net"], styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"], fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net"], imgSrc: ["'self'", "data:", "https:"], connectSrc: ["'self'", "https://api.stripe.com"], frameSrc: ["https://js.stripe.com", "https://www.paypal.com"] } } }));
 app.use(cors());
 if (process.env.NODE_ENV !== 'test') app.use(morgan('dev'));
@@ -33,7 +36,7 @@ app.use(cookieParser());
 app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: false, cookie: { secure: process.env.NODE_ENV === 'production', httpOnly: true, maxAge: 24 * 60 * 60 * 1000 } }));
+app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: false, cookie: { secure: process.env.NODE_ENV === 'production', httpOnly: true, sameSite: 'lax', maxAge: 24 * 60 * 60 * 1000 } }));
 app.use(flash());
 
 const hbs = engine({
@@ -65,6 +68,8 @@ app.use((req, res, next) => {
   res.locals.error_msg = req.flash('error_msg');
   res.locals.error = req.flash('error');
   res.locals.admin = req.session.admin || null;
+  res.locals.customer = req.session.customer || null;
+  res.locals.supportEmail = process.env.SUPPORT_EMAIL || null;
   res.locals.appName = process.env.APP_NAME;
   res.locals.appUrl = process.env.APP_URL;
   res.locals.stripePublishableKey = process.env.STRIPE_PUBLISHABLE_KEY;
@@ -79,6 +84,7 @@ app.use('/dashboard', require('./routes/dashboard'));
 app.use('/payments', require('./routes/payments'));
 app.use('/api/v1', require('./routes/api'));
 app.use('/auth', require('./routes/auth'));
+app.use('/cuenta', require('./routes/account'));
 
 app.use((req, res) => { res.status(404).render('404', { layout: 'main', title: '404' }); });
 app.use((err, req, res, next) => { console.error(err.stack); res.status(500).render('error', { layout: 'main', title: 'Error', message: process.env.NODE_ENV === 'development' ? err.message : 'Error interno' }); });
