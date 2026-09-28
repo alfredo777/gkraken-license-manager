@@ -52,7 +52,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true
     },
     user_role: {
-      type: DataTypes.ENUM('estudiante', 'docente', 'programador', 'emprendedor', 'investigador'),
+      type: DataTypes.ENUM('estudiante', 'docente', 'programador', 'emprendedor', 'investigador', 'empresa', 'otro'),
       defaultValue: 'programador'
     },
     encryption_key: {
@@ -124,10 +124,36 @@ module.exports = (sequelize, DataTypes) => {
     notes: {
       type: DataTypes.TEXT,
       allowNull: true
+    },
+    max_devices: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 1
+    },
+    features: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      comment: 'JSON con la lista de features; null = las del tipo (config/features.js)'
+    },
+    google_sub: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      comment: 'Identificador de la cuenta de Google (claim sub del id_token)'
+    },
+    auth_provider: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      defaultValue: 'manual',
+      comment: 'google | manual'
+    },
+    avatar_url: {
+      type: DataTypes.STRING(1024),
+      allowNull: true
     }
   }, {
     tableName: 'licenses',
     timestamps: true
+    // El índice único de google_sub lo crea utils/schemaUpgrade.js después de sync().
   });
 
   return License;

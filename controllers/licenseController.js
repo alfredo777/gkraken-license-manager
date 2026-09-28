@@ -4,6 +4,10 @@ const { generateLicenseKey, generateUnlockCode } = require('../utils/codeGenerat
 const { generateEncryptionKey, generateCertificate } = require('../utils/encryption');
 const { sendUnlockCode, sendLicenseInfo } = require('../utils/mailer');
 const { getClientIp, getGeoData } = require('../middleware/ipTracker');
+const { applyUpgrade } = require('../utils/applyUpgrade');
+
+const wantsJson = (req) => req.originalUrl.startsWith('/api') || req.is('json');
+const maxDevicesFrom = (v) => Math.min(Math.max(parseInt(v, 10) || 1, 1), 50);
 
 exports.dashboardStats = async () => {
   const totalLicenses = await License.count();
@@ -51,7 +55,7 @@ exports.createPage = (req, res) => { res.render('licenses/create', { layout: 'ma
 
 exports.create = async (req, res) => {
   try {
-    const { name, email, phone, country, user_role, license_type, plan_type, device_id, device_name, device_os, device_cpu, device_ram, notes } = req.body;
+    const { name, email, phone, country, user_role, license_type, plan_type, device_id, device_name, device_os, device_cpu, device_ram, notes, max_devices } = req.body;
     const ip = getClientIp(req); const geo = getGeoData(ip);
     const encKey = generateEncryptionKey();
     const certData = generateCertificate(name, email);
@@ -65,7 +69,7 @@ exports.create = async (req, res) => {
       status: license_type === 'free' ? 'active' : 'pending', start_date: startDate, end_date: endDate,
       name: name.trim(), email: email.trim().toLowerCase(), phone, country: country || geo.country, country_code: geo.country,
       user_role: user_role || 'programador', encryption_key: encKey, encryption_certificate: certData.certificate,
-      app_version: '1.0.0', auto_renew: false, registration_ip: ip, registration_country: geo.country, registration_city: geo.city, notes
+      app_version: '1.0.0', auto_renew: false, registration_ip: ip, registration_country: geo.country, registration_city: geo.city, notes, max_devices: maxDevicesFrom(max_devices)
     });
 
     if (device_id) {
@@ -74,14 +78,14 @@ exports.create = async (req, res) => {
     await AccessNode.create({ license_id: license.id, ip_address: ip, country: geo.country, region: geo.region, city: geo.city, timezone: geo.timezone, latitude: geo.latitude, longitude: geo.longitude, action: 'registration', user_agent: req.headers['user-agent'], response_status: true, accessed_at: new Date() });
     await sendLicenseInfo(email, license.toJSON());
 
-    if (req.headers['content-type'] === 'application/json' || req.originalUrl.startsWith('/api')) {
+    if (wantsJson(req)) {
       return res.status(201).json({ success: true, license: license.toJSON() });
     }
     req.flash('success_msg', 'Licencia creada exitosamente.');
     return res.redirect(`/dashboard/licenses/${license.id}`);
   } catch (error) {
     console.error('Create license error:', error);
-    if (req.headers['content-type'] === 'application/json') return res.status(500).json({ success: false, error: error.message });
+    if (wantsJson(req)) return res.status(500).json({ success: false, error: error.message });
     req.flash('error_msg', 'Error al crear licencia: ' + error.message);
     return res.redirect('/dashboard/licenses/create');
   }
@@ -109,13 +113,19 @@ exports.editPage = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     const license = await License.findByPk(req.params.id);
-    if (!license) { req.flash('error_msg', 'Licencia no encontrada.'); return res.redirect('/dashboard/licenses'); }
-    const { name, email, phone, country, user_role, license_type, plan_type, status, auto_renew, app_version, notes } = req.body;
-    await license.update({ name, email, phone, country, user_role, license_type, plan_type, status, auto_renew: auto_renew === 'on' || auto_renew === true, app_version, notes });
-    if (req.headers['content-type'] === 'application/json') return res.json({ success: true, license: license.toJSON() });
+    if (!license) {
+      if (wantsJson(req)) return res.status(404).json({ success: false, error: 'Licencia no encontrada.' });
+      req.flash('error_msg', 'Licencia no encontrada.'); return res.redirect('/dashboard/licenses');
+    }
+    const { name, email, phone, country, user_role, license_type, plan_type, status, auto_renew, app_version, notes, max_devices } = req.body;
+    await license.update({ name, email, phone, country, user_role, license_type, plan_type, status, auto_renew: auto_renew === 'on' || auto_renew === true, app_version, notes, max_devices: max_devices === undefined ? license.max_devices : maxDevicesFrom(max_devices) });
+    if (wantsJson(req)) return res.json({ success: true, license: license.toJSON() });
     req.flash('success_msg', 'Licencia actualizada.');
     return res.redirect(`/dashboard/licenses/${license.id}`);
-  } catch (error) { req.flash('error_msg', 'Error al actualizar: ' + error.message); return res.redirect(`/dashboard/licenses/${req.params.id}/edit`); }
+  } catch (error) {
+    if (wantsJson(req)) return res.status(400).json({ success: false, error: error.message });
+    req.flash('error_msg', 'Error al actualizar: ' + error.message); return res.redirect(`/dashboard/licenses/${req.params.id}/edit`);
+  }
 };
 
 exports.delete = async (req, res) => {
@@ -136,21 +146,22 @@ exports.upgrade = async (req, res) => {
   try {
     const license = await License.findByPk(req.params.id);
     if (!license) {
-      if (req.headers['content-type'] === 'application/json') return res.status(404).json({ success: false, error: 'No encontrada.' });
+      if (wantsJson(req)) return res.status(404).json({ success: false, error: 'No encontrada.' });
       req.flash('error_msg', 'No encontrada.'); return res.redirect('/dashboard/licenses');
     }
-    const { plan_type } = req.body;
-    const startDate = new Date(); let endDate = new Date();
-    if (plan_type === 'annual') endDate.setFullYear(endDate.getFullYear() + 1); else endDate.setMonth(endDate.getMonth() + 1);
-    const newKey = generateLicenseKey('pro'); const encKey = generateEncryptionKey(); const certData = generateCertificate(license.name, license.email);
-    await license.update({ license_key: newKey, license_type: 'pro', plan_type: plan_type || 'annual', status: 'active', start_date: startDate, end_date: endDate, encryption_key: encKey, encryption_certificate: certData.certificate });
+    const plan_type = req.body.plan_type === 'monthly' ? 'monthly' : 'annual';
+    // La clave de licencia se conserva: la app no tiene que migrar a otra clave.
+    await applyUpgrade(license, { plan_type });
     const ip = getClientIp(req); const geo = getGeoData(ip);
     await AccessNode.create({ license_id: license.id, ip_address: ip, country: geo.country, region: geo.region, city: geo.city, action: 'upgrade', user_agent: req.headers['user-agent'], response_status: true, accessed_at: new Date() });
-    await sendLicenseInfo(license.email, { ...license.toJSON(), license_key: newKey });
-    if (req.headers['content-type'] === 'application/json') return res.json({ success: true, license: license.toJSON() });
+    if (wantsJson(req)) return res.json({ success: true, license: license.toJSON() });
     req.flash('success_msg', `Licencia actualizada a PRO (${plan_type}).`);
     return res.redirect(`/dashboard/licenses/${license.id}`);
-  } catch (error) { console.error('Upgrade error:', error); req.flash('error_msg', 'Error al actualizar.'); return res.redirect('/dashboard/licenses'); }
+  } catch (error) {
+    console.error('Upgrade error:', error);
+    if (wantsJson(req)) return res.status(500).json({ success: false, error: 'Error al actualizar.' });
+    req.flash('error_msg', 'Error al actualizar.'); return res.redirect('/dashboard/licenses');
+  }
 };
 
 exports.generateUnlock = async (req, res) => {

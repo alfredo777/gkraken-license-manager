@@ -1,0 +1,112 @@
+<div class="gk-contenedor gk-cuenta">
+  <div class="gk-cuenta__cabeza">
+    <div class="gk-persona">
+      {{#if customer.avatar}}<img src="{{customer.avatar}}" alt="" class="gk-avatar" referrerpolicy="no-referrer">{{else}}<span class="gk-avatar" aria-hidden="true"></span>{{/if}}
+      <div><h1>{{customer.name}}</h1><p>{{customer.email}}</p></div>
+    </div>
+    <form action="/cuenta/salir" method="POST" class="gk-enlinea"><input type="hidden" name="_csrf" value="{{csrf}}"><button class="gk-btn gk-btn--borde gk-btn--chico">Salir</button></form>
+  </div>
+
+  {{#each success_msg}}<div class="gk-aviso gk-aviso--ok" role="status">{{this}}</div>{{/each}}
+  {{#each error_msg}}<div class="gk-aviso gk-aviso--error" role="alert">{{this}}</div>{{/each}}
+  {{#if paymentOk}}<div class="gk-aviso gk-aviso--ok" role="status">Pago recibido. Tu licencia se actualiza en unos segundos; recarga la página si aún no ves PRO.</div>{{/if}}
+
+  <section class="gk-bloque" aria-labelledby="t-licencia">
+    <div class="gk-bloque__cabeza">
+      <h2 id="t-licencia">Tu licencia</h2>
+      <div class="gk-chips">
+        {{#if isPro}}<span class="gk-chip gk-chip--pro">PRO</span>{{else}}<span class="gk-chip">FREE</span>{{/if}}
+        {{#if (eq status 'active')}}<span class="gk-chip gk-chip--activa">Activa</span>{{/if}}
+        {{#if (eq status 'expired')}}<span class="gk-chip gk-chip--mal">Vencida</span>{{/if}}
+        {{#if (eq status 'suspended')}}<span class="gk-chip gk-chip--pausa">Suspendida</span>{{/if}}
+        {{#if (eq status 'revoked')}}<span class="gk-chip gk-chip--mal">Revocada</span>{{/if}}
+      </div>
+    </div>
+    <dl class="gk-datos">
+      <div><dt>Clave</dt><dd class="gk-clave">{{license.license_key}}</dd></div>
+      <div><dt>Plan</dt><dd>{{#if isLifetimeFree}}Gratuito{{else}}{{#if (eq license.plan_type 'annual')}}PRO anual{{else}}PRO mensual{{/if}}{{/if}}</dd></div>
+      <div><dt>Vigencia</dt><dd>{{#if isLifetimeFree}}Sin vencimiento{{else}}Hasta el {{formatDate license.end_date}} ({{daysRemaining}} días){{/if}}</dd></div>
+      <div><dt>Funciones</dt><dd class="gk-chips">{{#each features}}<span class="gk-chip">{{this}}</span>{{/each}}</dd></div>
+    </dl>
+    {{#if (eq status 'suspended')}}<div class="gk-aviso gk-aviso--atencion" style="margin:18px 0 0">Tu licencia está suspendida.{{#if supportEmail}} Escríbenos a <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>.{{/if}}</div>{{/if}}
+  </section>
+
+  {{#if canPay}}
+  <section class="gk-bloque gk-bloque--acento" aria-labelledby="t-pro">
+    <div class="gk-bloque__cabeza"><h2 id="t-pro">{{#if isPro}}Extender PRO{{else}}Pasar a PRO{{/if}}</h2></div>
+    <p>{{#if isPro}}El tiempo nuevo se suma al que ya tienes.{{else}}Funciones avanzadas, exportaciones ilimitadas y soporte prioritario. Tu clave no cambia.{{/if}}</p>
+    <div class="gk-dos">
+      <form action="/cuenta/pro" method="POST"><input type="hidden" name="_csrf" value="{{csrf}}"><input type="hidden" name="plan_type" value="monthly"><button class="gk-btn gk-btn--borde-acento gk-btn--ancho">Mensual · ${{priceMonthly}} {{currencyCode}}</button></form>
+      <form action="/cuenta/pro" method="POST"><input type="hidden" name="_csrf" value="{{csrf}}"><input type="hidden" name="plan_type" value="annual"><button class="gk-btn gk-btn--acento gk-btn--ancho">Anual · ${{priceAnnual}} {{currencyCode}}</button></form>
+    </div>
+  </section>
+  {{/if}}
+
+  <section class="gk-bloque" id="ia" aria-labelledby="t-ia">
+    <div class="gk-bloque__cabeza"><h2 id="t-ia">IA de Green Kraken</h2>{{#if ai}}<span class="gk-chip gk-chip--activa">{{ai.plan}}</span>{{else}}<span class="gk-chip">Sin plan</span>{{/if}}</div>
+    {{#if aiOk}}<div class="gk-aviso gk-aviso--ok" role="status">Pago recibido. Tu plan de IA se activa en unos segundos.</div>{{/if}}
+    <p>Usa Claude, Grok, ChatGPT, Gemini y más desde la app sin cuentas con cada proveedor. Tu propia clave de API sigue funcionando igual. <a href="/como-funciona">¿Cómo funciona?</a></p>
+    <!-- La barra existe siempre (vacía sin plan) para que el bloque no cambie de alto. -->
+    <div class="gk-uso" aria-label="Tokens usados este mes">
+      <div class="gk-uso__barra"><span style="width:{{#if ai}}{{ai.percent}}{{else}}0{{/if}}%"></span></div>
+      <p class="gk-uso__txt">{{#if ai}}{{ai.used}} de {{ai.limit}} tokens · {{#if ai.cancelAtPeriodEnd}}termina{{else}}se renueva{{/if}} el {{formatDate ai.periodEnd}}{{else}}&nbsp;{{/if}}</p>
+    </div>
+    {{#if ai}}{{#if (eq ai.status 'past_due')}}<div class="gk-aviso gk-aviso--atencion">No pudimos cobrar la renovación. Actualiza tu método de pago para seguir usando la IA.</div>{{/if}}{{/if}}
+    {{#if aiPlans.length}}
+      <div class="gk-dos gk-planes-ia">
+        {{#each aiPlans}}
+          <form action="/cuenta/ia/suscribir" method="POST" class="gk-plan-ia{{#if this.isCurrent}} gk-plan-ia--actual{{/if}}">
+            <input type="hidden" name="_csrf" value="{{../csrf}}"><input type="hidden" name="plan_id" value="{{this.id}}">
+            <strong>{{this.name}}</strong>
+            <span class="gk-plan-ia__precio">${{this.price_monthly}} {{../currencyCode}}/mes</span>
+            <span class="gk-sutil">{{this.tokensLabel}} tokens al mes</span>
+            <span class="gk-sutil gk-plan-ia__desc">{{this.description}}</span>
+            {{#if this.isCurrent}}<span class="gk-chip gk-chip--activa">Tu plan</span>{{else}}<button class="gk-btn gk-btn--borde-acento gk-btn--chico">{{#if ../ai}}Cambiar a este plan{{else}}Suscribirme{{/if}}</button>{{/if}}
+          </form>
+        {{/each}}
+      </div>
+    {{else}}
+      <p class="gk-sutil">Los planes de IA estarán disponibles pronto.</p>
+    {{/if}}
+    {{#if ai}}{{#unless ai.cancelAtPeriodEnd}}
+      <form action="/cuenta/ia/cancelar" method="POST" style="margin-top:14px" onsubmit="return confirm('¿Cancelar tu plan de IA? Podrás usarlo hasta el final del periodo pagado.')"><input type="hidden" name="_csrf" value="{{csrf}}"><button class="gk-boton-texto">Cancelar plan de IA</button></form>
+    {{/unless}}{{/if}}
+    {{#if aiTokens.length}}
+      <h3 class="gk-subtitulo">Equipos conectados a la IA</h3>
+      <ul class="gk-filas">
+        {{#each aiTokens}}
+          <li>
+            <div class="gk-fila__txt"><strong>{{#if this.device_name}}{{this.device_name}}{{else}}Equipo{{/if}}</strong><small>{{this.prefix}}… · último uso {{#if this.last_used_at}}{{formatDateTime this.last_used_at}}{{else}}nunca{{/if}}</small></div>
+            <form action="/cuenta/ia/tokens/{{this.id}}/revocar" method="POST"><input type="hidden" name="_csrf" value="{{../csrf}}"><button class="gk-btn gk-btn--borde gk-btn--chico">Desconectar</button></form>
+          </li>
+        {{/each}}
+      </ul>
+    {{/if}}
+  </section>
+
+  <section class="gk-bloque" aria-labelledby="t-equipos">
+    <div class="gk-bloque__cabeza"><h2 id="t-equipos">Dispositivos</h2><span class="gk-chip">{{devices.length}} de {{maxDevices}}</span></div>
+    <p>Libera un equipo para usar tu licencia en otro. En la app también puedes moverla iniciando sesión con Google.</p>
+    {{#if devices.length}}
+      <ul class="gk-filas">
+        {{#each devices}}
+          <li>
+            <div class="gk-fila__txt"><strong>{{this.device_name}}</strong><small>{{this.device_os}} {{this.device_os_version}} · última vez {{formatDateTime this.last_seen}}</small></div>
+            <form action="/cuenta/dispositivos/{{this.id}}/desvincular" method="POST" onsubmit="return confirm('¿Liberar este dispositivo? La app dejará de funcionar ahí hasta que vuelvas a iniciar sesión.')"><input type="hidden" name="_csrf" value="{{../csrf}}"><button class="gk-btn gk-btn--borde gk-btn--chico">Liberar</button></form>
+          </li>
+        {{/each}}
+      </ul>
+    {{else}}
+      <p class="gk-sutil">Aún no hay equipos. <a href="/#descargar">Descarga la app</a> e inicia sesión con Google.</p>
+    {{/if}}
+  </section>
+
+  {{#if payments.length}}
+  <section class="gk-bloque" aria-labelledby="t-pagos">
+    <div class="gk-bloque__cabeza"><h2 id="t-pagos">Pagos</h2></div>
+    <ul class="gk-filas">
+      {{#each payments}}<li><span class="gk-fila__txt">{{formatDate this.paid_at}} · {{#if (eq this.plan_type 'annual')}}Anual{{else}}Mensual{{/if}}</span><span>{{currency this.amount}}</span></li>{{/each}}
+    </ul>
+  </section>
+  {{/if}}
+</div>

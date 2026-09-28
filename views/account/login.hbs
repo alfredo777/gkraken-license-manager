@@ -1,0 +1,11 @@
+<div class="gk-caja">
+  <img src="/img/Icon-192.png" alt="" class="gk-caja__logo" width="96" height="96">
+  <h1>Entra a Green Kraken</h1>
+  <p>Usa la misma cuenta de Google que en la app. Si aún no tienes licencia, creamos una gratuita.</p>
+  {{#if message}}<div class="gk-aviso gk-aviso--error" role="alert">{{message}}</div>{{/if}}
+  {{#if googleReady}}
+    <a href="/cuenta/entrar?go=1" class="gk-btn gk-btn--google gk-btn--ancho">{{> google-g}} Continuar con Google</a>
+  {{else}}
+    <div class="gk-aviso gk-aviso--atencion">El inicio de sesión con Google todavía no está disponible.</div>
+  {{/if}}
+</div>

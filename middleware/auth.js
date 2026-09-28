@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { Admin } = require('../models');
 
@@ -39,12 +40,18 @@ const requireApiAuth = async (req, res, next) => {
   }
 };
 
+// Clave de la app cliente (cabecera X-API-Key). Falla cerrado: sin API_KEY
+// configurada solo se permite en desarrollo/pruebas; en producción responde 503.
 const requireApiKey = (req, res, next) => {
-  const apiKey = req.headers['x-api-key'] || req.query.api_key;
-  if (!apiKey || apiKey !== process.env.API_KEY) {
-    if (!process.env.API_KEY) return next();
-    return res.status(403).json({ success: false, error: 'API key inválida.' });
+  const expected = process.env.API_KEY;
+  if (!expected) {
+    if (process.env.NODE_ENV === 'production') return res.status(503).json({ success: false, error: 'API_KEY no configurada en el servidor.' });
+    return next();
   }
+  const given = req.get('x-api-key') || '';
+  const a = crypto.createHash('sha256').update(given).digest();
+  const b = crypto.createHash('sha256').update(expected).digest();
+  if (!given || !crypto.timingSafeEqual(a, b)) return res.status(403).json({ success: false, error: 'API key inválida.' });
   next();
 };
 

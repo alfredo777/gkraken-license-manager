@@ -1,0 +1,106 @@
+<section class="gk-hero gk-hero--corto">
+  <div class="gk-contenedor gk-hero__uno">
+    <span class="gk-etiqueta">Cómo funciona</span>
+    <h1>Todas las IAs,<br><b>desde una sola app.</b></h1>
+    <p class="gk-hero__texto">Green Kraken es una app de escritorio para chatear con IA, organizar tu contexto y automatizar tareas con flujos visuales. Tú eliges qué IA usar y cómo pagarla.</p>
+  </div>
+</section>
+
+<section class="gk-seccion gk-seccion--banda">
+  <div class="gk-contenedor">
+    <h2>Qué haces con Green Kraken</h2>
+    <p class="gk-seccion__intro">Todo corre en tu computadora: tus chats, documentos y flujos se guardan en tu equipo.</p>
+    <div class="gk-pasos">
+      <div><span>Chat</span><h3>Conversa con cualquier IA</h3><p>Cambia de Claude a Grok o a Gemini en la misma conversación de trabajo. Adjunta archivos, dicta por voz y agrega páginas web como contexto.</p></div>
+      <div><span>Contexto</span><h3>Dale a la IA lo que necesita saber</h3><p>Arma paquetes con tus documentos y tu perfil profesional. Green Kraken los resume para gastar menos tokens.</p></div>
+      <div><span>Flujos</span><h3>Automatiza con nodos</h3><p>Conecta pasos: pedir datos a una API, pasarlos por la IA, generar un PDF, mandar un correo. Si un paso falla, la IA ayuda a corregirlo.</p></div>
+      <div><span>Uso</span><h3>Sabe cuánto gastas</h3><p>Tokens y costo por proveedor y modelo, por día o por mes.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="dos-formas" class="gk-seccion">
+  <div class="gk-contenedor">
+    <h2>Dos formas de usar la IA</h2>
+    <p class="gk-seccion__intro">Puedes usar las dos a la vez: por ejemplo, tu propia clave de OpenAI y el plan de Green Kraken para Claude y Grok. En cada modelo eliges la conexión.</p>
+    <div class="gk-rejilla gk-rejilla--parejas">
+      <article class="gk-tarjeta">
+        <h3>Con tu propia clave</h3>
+        <p>Pegas tu clave de API de Anthropic, xAI, OpenAI, Google, DeepSeek u otro proveedor en la app. Las peticiones van <b>directo de tu computadora al proveedor</b>; Green Kraken no las ve ni las cobra.</p>
+        <ul class="gk-lista" style="margin-top:14px"><li>{{> check}} Pagas al proveedor según lo que uses</li><li>{{> check}} Necesitas una cuenta con cada proveedor</li><li>{{> check}} Incluido en la licencia gratuita</li></ul>
+      </article>
+      <article class="gk-tarjeta" style="border-color:var(--gk-acento)">
+        <h3>Con el plan de IA de Green Kraken</h3>
+        <p>Pagas un plan mensual con una cantidad de tokens y usas <b>Claude, Grok, ChatGPT, Gemini, DeepSeek, Qwen y más</b> sin crear cuentas ni pegar claves. Nosotros contratamos los proveedores; tú solo eliges el modelo.</p>
+        <ul class="gk-lista" style="margin-top:14px"><li>{{> check}} Un solo pago al mes</li><li>{{> check}} Cambias de modelo cuando quieras</li><li>{{> check}} Ves en la app cuántos tokens te quedan</li></ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="gk-seccion gk-seccion--banda">
+  <div class="gk-contenedor">
+    <h2>Qué pasa con cada petición del plan</h2>
+    <p class="gk-seccion__intro">La petición hace una escala en nuestro servidor antes de llegar al proveedor. Ahí se verifica, se cobra y se protege la clave.</p>
+    <ol class="gk-flujo">
+      <li><strong>La app</strong><span>Manda tu mensaje con el token de tu equipo, no con una clave del proveedor.</span></li>
+      <li><strong>Green Kraken verifica</strong><span>Que el token sea tuyo y siga vigente, que tu plan incluya ese modelo y que te queden tokens.</span></li>
+      <li><strong>Se usa la clave</strong><span>Las claves de los proveedores están cifradas en el servidor y solo se abren para una petición ya autorizada. Nunca llegan a tu computadora.</span></li>
+      <li><strong>El proveedor responde</strong><span>La respuesta te llega en tiempo real, palabra por palabra, igual que con tu propia clave.</span></li>
+      <li><strong>Se cuentan los tokens</strong><span>Se descuenta de tu plan lo que el proveedor reporta que se usó, ni más ni menos.</span></li>
+    </ol>
+    <p class="gk-nota">Cada equipo tiene su propio token. Si pierdes o cambias de computadora, desconéctalo desde <a href="/cuenta#ia">Mi cuenta</a> y deja de funcionar al momento.</p>
+  </div>
+</section>
+
+<section id="modelos" class="gk-seccion">
+  <div class="gk-contenedor">
+    <h2>Modelos del plan</h2>
+    {{#if providers.length}}
+      <p class="gk-seccion__intro">Algunos modelos más potentes descuentan más tokens por cada token que usan; el multiplicador aparece junto al nombre.</p>
+      <div class="gk-rejilla">
+        {{#each providers}}
+          <article class="gk-tarjeta">
+            <h3 style="margin-top:0">{{this.name}}</h3>
+            <ul class="gk-lista" style="margin:0">{{#each this.models}}<li>{{> check}} {{this.name}}{{#if (gt this.factor 1)}} <span class="gk-chip">×{{this.factor}}</span>{{/if}}</li>{{/each}}</ul>
+          </article>
+        {{/each}}
+      </div>
+    {{else}}
+      <p class="gk-seccion__intro">Claude, Grok, ChatGPT, Gemini, DeepSeek y Qwen. La lista de modelos se publica al abrir los planes.</p>
+    {{/if}}
+  </div>
+</section>
+
+<section id="planes-ia" class="gk-seccion gk-seccion--banda gk-centro">
+  <div class="gk-contenedor">
+    <h2>Planes de IA</h2>
+    {{#if plans.length}}
+      <p class="gk-seccion__intro">Se renuevan cada mes y los tokens se reinician al renovar. Cancela cuando quieras desde Mi cuenta.</p>
+      <div class="gk-planes" style="text-align:left">
+        {{#each plans}}
+          <article class="gk-plan">
+            <div class="gk-plan__insignia"></div>
+            <h3>{{this.name}}</h3>
+            <p class="gk-precio">${{this.price_monthly}} <small>{{../currencyCode}}/mes</small></p>
+            <ul class="gk-lista"><li>{{> check}} {{this.tokensLabel}} tokens al mes</li>{{#if this.description}}<li>{{> check}} {{this.description}}</li>{{/if}}</ul>
+            <a href="/cuenta#ia" class="gk-btn gk-btn--acento">Suscribirme</a>
+          </article>
+        {{/each}}
+      </div>
+    {{else}}
+      <p class="gk-seccion__intro">Los planes de IA estarán disponibles muy pronto. Mientras tanto, usa Green Kraken con tu propia clave.</p>
+    {{/if}}
+  </div>
+</section>
+
+<section class="gk-seccion">
+  <div class="gk-contenedor gk-faq">
+    <h2>Preguntas frecuentes</h2>
+    <details><summary>¿Qué es un token?</summary><p>Es la unidad con la que las IAs miden texto: aproximadamente ¾ de una palabra en español. Cuentan tanto lo que envías como lo que responde la IA.</p></details>
+    <details><summary>¿Qué pasa si se me acaban los tokens?</summary><p>Las peticiones con el plan se detienen hasta que se renueve el mes o cambies a un plan más grande. Tus modelos con clave propia siguen funcionando.</p></details>
+    <details><summary>¿Puedo seguir usando mi propia clave?</summary><p>Sí. El plan no reemplaza tu clave: en cada modelo eliges "Mi clave" o "Green Kraken".</p></details>
+    <details><summary>¿Green Kraken lee mis conversaciones?</summary><p>Con tu propia clave, no pasan por nuestro servidor. Con el plan, pasan de camino al proveedor y solo guardamos cuántos tokens se usaron, no el contenido.</p></details>
+    <details><summary>¿Cómo activo el plan en la app?</summary><p>Suscríbete en <a href="/cuenta#ia">Mi cuenta</a>, inicia sesión con Google en la app y elige "Green Kraken" como conexión del modelo.</p></details>
+  </div>
+</section>

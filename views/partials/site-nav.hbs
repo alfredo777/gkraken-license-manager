@@ -1,0 +1,15 @@
+<header class="gk-nav">
+  <div class="gk-contenedor">
+    <a href="/" class="gk-marca" aria-label="Green Kraken, inicio"><img src="/img/marca.png" alt="" width="34" height="34"><span><b>Green</b> Kraken</span></a>
+    <nav class="gk-nav__links" aria-label="Principal">
+      <a href="/como-funciona" class="gk-nav__opcional">Cómo funciona</a>
+      <a href="/#planes" class="gk-nav__opcional">Planes</a>
+      <a href="/#descargar" class="gk-nav__opcional">Descargar</a>
+      {{#if customer}}
+        <a href="/cuenta" class="gk-btn gk-btn--borde gk-btn--chico">{{#if customer.avatar}}<img src="{{customer.avatar}}" alt="" class="gk-avatar" style="width:22px;height:22px" referrerpolicy="no-referrer">{{/if}}Mi cuenta</a>
+      {{else}}
+        <a href="/cuenta/entrar" class="gk-btn gk-btn--acento gk-btn--chico">Entrar</a>
+      {{/if}}
+    </nav>
+  </div>
+</header>

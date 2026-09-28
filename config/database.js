@@ -11,6 +11,16 @@ module.exports = {
       freezeTableName: true
     }
   },
+  test: {
+    dialect: 'sqlite',
+    storage: ':memory:',
+    logging: false,
+    define: {
+      timestamps: true,
+      underscored: true,
+      freezeTableName: true
+    }
+  },
   production: {
     dialect: process.env.DB_DIALECT || 'postgres',
     host: process.env.DB_HOST,

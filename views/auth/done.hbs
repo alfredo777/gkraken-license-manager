@@ -1,0 +1,12 @@
+<div class="gk-caja">
+  <img src="/img/Icon-192.png" alt="" class="gk-caja__logo" width="96" height="96">
+  {{#if ok}}
+    <h1>Listo{{#if name}}, {{name}}{{/if}}</h1>
+    <div class="gk-aviso gk-aviso--ok">{{message}}</div>
+    <p>Ya puedes cerrar esta pestaña y volver a Green Kraken.</p>
+  {{else}}
+    <h1>No se pudo iniciar sesión</h1>
+    <div class="gk-aviso gk-aviso--error" role="alert">{{message}}</div>
+    <p>Vuelve a Green Kraken e inténtalo de nuevo.</p>
+  {{/if}}
+</div>
