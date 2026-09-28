@@ -1,5 +1,6 @@
 // Catálogo de features y precios que ve la app cliente (Green Kraken).
 // Si una licencia no tiene `features` propias, se usan las de su tipo.
+// advanced_features quita el límite de 3 flujos de trabajo de la versión gratuita en la app.
 
 const FEATURES = {
   free: ['basic_features', 'limited_exports'],
