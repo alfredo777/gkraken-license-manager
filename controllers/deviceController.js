@@ -1,6 +1,6 @@
-const { License, Device, AccessNode, DeviceMigration } = require('../models');
+const { License, Device, DeviceMigration } = require('../models');
 const { getClientIp, getGeoData } = require('../middleware/ipTracker');
-const { sendMigrationNotification } = require('../utils/mailer');
+const { migrateDevice } = require('../utils/deviceMigration');
 
 exports.index = async (req, res) => {
   try {
@@ -19,29 +19,28 @@ exports.migratePage = async (req, res) => {
 };
 
 exports.migrate = async (req, res) => {
+  const isApi = req.originalUrl.startsWith('/api');
   try {
     const { license_id, new_device_id, new_device_name, new_device_os, new_device_cpu, new_device_ram, reason } = req.body;
     const licenseId = license_id || req.params.licenseId;
+    if (!new_device_id) {
+      if (isApi) return res.status(400).json({ success: false, error: 'new_device_id es requerido.' });
+      req.flash('error_msg', 'Falta el ID del dispositivo nuevo.'); return res.redirect(`/dashboard/devices/migrate/${licenseId}`);
+    }
     const ip = getClientIp(req); const geo = getGeoData(ip);
     const license = await License.findByPk(licenseId, { include: [{ model: Device, as: 'devices', where: { is_active: true }, required: false }] });
     if (!license) {
-      if (req.originalUrl.startsWith('/api')) return res.status(404).json({ success: false, error: 'No encontrada.' });
+      if (isApi) return res.status(404).json({ success: false, error: 'No encontrada.' });
       req.flash('error_msg', 'No encontrada.'); return res.redirect('/dashboard/licenses');
     }
-    const activeDevice = license.devices?.[0];
-    const oldDeviceId = activeDevice?.device_id || 'N/A';
-    const oldDeviceName = activeDevice?.device_name || 'N/A';
-    if (activeDevice) await activeDevice.update({ is_active: false });
-    await Device.create({ license_id: license.id, device_id: new_device_id, device_name: new_device_name || 'Unknown', device_os: new_device_os || '', device_cpu: new_device_cpu || '', device_ram: new_device_ram || '', is_active: true, last_seen: new Date(), registered_ip: ip });
-    await DeviceMigration.create({ license_id: license.id, old_device_id: oldDeviceId, old_device_name: oldDeviceName, new_device_id, new_device_name: new_device_name || 'Unknown', reason: reason || 'Migración', migrated_by: req.originalUrl.startsWith('/api') ? 'api' : 'admin', ip_address: ip, migrated_at: new Date() });
-    await AccessNode.create({ license_id: license.id, ip_address: ip, country: geo.country, region: geo.region, city: geo.city, action: 'migration', user_agent: req.headers['user-agent'], device_id: new_device_id, response_status: true, accessed_at: new Date() });
-    await sendMigrationNotification(license.email, license.name, oldDeviceName, new_device_name || new_device_id);
-    if (req.originalUrl.startsWith('/api')) return res.json({ success: true, message: 'Dispositivo migrado.' });
+    await migrateDevice(license, { device_id: new_device_id, device_name: new_device_name, device_os: new_device_os, device_cpu: new_device_cpu, device_ram: new_device_ram },
+      { reason, migratedBy: isApi ? 'api' : 'admin', ip, geo, userAgent: req.headers['user-agent'] });
+    if (isApi) return res.json({ success: true, message: 'Dispositivo migrado.' });
     req.flash('success_msg', 'Dispositivo migrado.');
     return res.redirect(`/dashboard/licenses/${license.id}`);
   } catch (error) {
     console.error('Migration error:', error);
-    if (req.originalUrl.startsWith('/api')) return res.status(500).json({ success: false, error: error.message });
+    if (isApi) return res.status(500).json({ success: false, error: error.message });
     req.flash('error_msg', 'Error: ' + error.message); return res.redirect('/dashboard/licenses');
   }
 };

@@ -22,6 +22,7 @@ const Device = require('./Device')(sequelize, Sequelize.DataTypes);
 const AccessNode = require('./AccessNode')(sequelize, Sequelize.DataTypes);
 const Payment = require('./Payment')(sequelize, Sequelize.DataTypes);
 const DeviceMigration = require('./DeviceMigration')(sequelize, Sequelize.DataTypes);
+const AuthSession = require('./AuthSession')(sequelize, Sequelize.DataTypes);
 
 // Associations
 License.hasMany(Device, { foreignKey: 'license_id', as: 'devices' });
@@ -36,6 +37,8 @@ Payment.belongsTo(License, { foreignKey: 'license_id', as: 'license' });
 License.hasMany(DeviceMigration, { foreignKey: 'license_id', as: 'migrations' });
 DeviceMigration.belongsTo(License, { foreignKey: 'license_id', as: 'license' });
 
+AuthSession.belongsTo(License, { foreignKey: 'license_id', as: 'license' });
+
 module.exports = {
   sequelize,
   Sequelize,
@@ -44,5 +47,6 @@ module.exports = {
   Device,
   AccessNode,
   Payment,
-  DeviceMigration
+  DeviceMigration,
+  AuthSession
 };

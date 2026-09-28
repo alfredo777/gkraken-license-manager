@@ -1,0 +1,10 @@
+process.env.NODE_ENV = 'test';
+process.env.SESSION_SECRET = 'test-session-secret-0123456789abcdef0123456789';
+process.env.JWT_SECRET = 'test-jwt-secret-0123456789abcdef0123456789abcdef';
+process.env.API_KEY = 'test-api-key-0123456789abcdef0123456789';
+process.env.APP_URL = 'http://licencias.test';
+process.env.STRIPE_SECRET_KEY = 'sk_test_dummy';
+process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_secret';
+process.env.GOOGLE_CLIENT_ID = 'test-client.apps.googleusercontent.com';
+process.env.GOOGLE_CLIENT_SECRET = 'test-google-secret';
+process.env.SUPPORT_EMAIL = 'soporte@monterlabs.test';

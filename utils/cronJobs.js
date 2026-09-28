@@ -69,6 +69,17 @@ const startAll = () => {
     }
   });
 
+  // Borrar sesiones de login con Google vencidas o ya entregadas
+  cron.schedule('30 * * * *', async () => {
+    try {
+      const { AuthSession } = require('../models');
+      const cutoff = new Date(Date.now() - 60 * 60 * 1000);
+      await AuthSession.destroy({ where: { [Op.or]: [{ expires_at: { [Op.lt]: cutoff } }, { status: 'consumed' }] } });
+    } catch (err) {
+      console.error('Error limpiando sesiones de login:', err);
+    }
+  });
+
   console.log('⏰ Cron jobs iniciados');
 };
 
