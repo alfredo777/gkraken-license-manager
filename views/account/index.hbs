@@ -42,6 +42,48 @@
   </section>
   {{/if}}
 
+  <section class="gk-bloque" id="ia" aria-labelledby="t-ia">
+    <div class="gk-bloque__cabeza"><h2 id="t-ia">IA de Green Kraken</h2>{{#if ai}}<span class="gk-chip gk-chip--activa">{{ai.plan}}</span>{{else}}<span class="gk-chip">Sin plan</span>{{/if}}</div>
+    {{#if aiOk}}<div class="gk-aviso gk-aviso--ok" role="status">Pago recibido. Tu plan de IA se activa en unos segundos.</div>{{/if}}
+    <p>Usa Claude, Grok, ChatGPT, Gemini y más desde la app sin cuentas con cada proveedor. Tu propia clave de API sigue funcionando igual. <a href="/como-funciona">¿Cómo funciona?</a></p>
+    <!-- La barra existe siempre (vacía sin plan) para que el bloque no cambie de alto. -->
+    <div class="gk-uso" aria-label="Tokens usados este mes">
+      <div class="gk-uso__barra"><span style="width:{{#if ai}}{{ai.percent}}{{else}}0{{/if}}%"></span></div>
+      <p class="gk-uso__txt">{{#if ai}}{{ai.used}} de {{ai.limit}} tokens · {{#if ai.cancelAtPeriodEnd}}termina{{else}}se renueva{{/if}} el {{formatDate ai.periodEnd}}{{else}}&nbsp;{{/if}}</p>
+    </div>
+    {{#if ai}}{{#if (eq ai.status 'past_due')}}<div class="gk-aviso gk-aviso--atencion">No pudimos cobrar la renovación. Actualiza tu método de pago para seguir usando la IA.</div>{{/if}}{{/if}}
+    {{#if aiPlans.length}}
+      <div class="gk-dos gk-planes-ia">
+        {{#each aiPlans}}
+          <form action="/cuenta/ia/suscribir" method="POST" class="gk-plan-ia{{#if this.isCurrent}} gk-plan-ia--actual{{/if}}">
+            <input type="hidden" name="_csrf" value="{{../csrf}}"><input type="hidden" name="plan_id" value="{{this.id}}">
+            <strong>{{this.name}}</strong>
+            <span class="gk-plan-ia__precio">${{this.price_monthly}} {{../currencyCode}}/mes</span>
+            <span class="gk-sutil">{{this.tokensLabel}} tokens al mes</span>
+            <span class="gk-sutil gk-plan-ia__desc">{{this.description}}</span>
+            {{#if this.isCurrent}}<span class="gk-chip gk-chip--activa">Tu plan</span>{{else}}<button class="gk-btn gk-btn--borde-acento gk-btn--chico">{{#if ../ai}}Cambiar a este plan{{else}}Suscribirme{{/if}}</button>{{/if}}
+          </form>
+        {{/each}}
+      </div>
+    {{else}}
+      <p class="gk-sutil">Los planes de IA estarán disponibles pronto.</p>
+    {{/if}}
+    {{#if ai}}{{#unless ai.cancelAtPeriodEnd}}
+      <form action="/cuenta/ia/cancelar" method="POST" style="margin-top:14px" onsubmit="return confirm('¿Cancelar tu plan de IA? Podrás usarlo hasta el final del periodo pagado.')"><input type="hidden" name="_csrf" value="{{csrf}}"><button class="gk-boton-texto">Cancelar plan de IA</button></form>
+    {{/unless}}{{/if}}
+    {{#if aiTokens.length}}
+      <h3 class="gk-subtitulo">Equipos conectados a la IA</h3>
+      <ul class="gk-filas">
+        {{#each aiTokens}}
+          <li>
+            <div class="gk-fila__txt"><strong>{{#if this.device_name}}{{this.device_name}}{{else}}Equipo{{/if}}</strong><small>{{this.prefix}}… · último uso {{#if this.last_used_at}}{{formatDateTime this.last_used_at}}{{else}}nunca{{/if}}</small></div>
+            <form action="/cuenta/ia/tokens/{{this.id}}/revocar" method="POST"><input type="hidden" name="_csrf" value="{{../csrf}}"><button class="gk-btn gk-btn--borde gk-btn--chico">Desconectar</button></form>
+          </li>
+        {{/each}}
+      </ul>
+    {{/if}}
+  </section>
+
   <section class="gk-bloque" aria-labelledby="t-equipos">
     <div class="gk-bloque__cabeza"><h2 id="t-equipos">Dispositivos</h2><span class="gk-chip">{{devices.length}} de {{maxDevices}}</span></div>
     <p>Libera un equipo para usar tu licencia en otro. En la app también puedes moverla iniciando sesión con Google.</p>

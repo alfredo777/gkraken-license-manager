@@ -250,6 +250,33 @@ p { margin: 0; }
 .gk-boton-texto { background: none; border: 0; padding: 0; font: inherit; color: var(--gk-texto-2); cursor: pointer; }
 .gk-boton-texto:hover { color: var(--gk-texto); }
 
+/* ------------------------------------------------------------ cómo funciona */
+.gk-hero--corto { padding-bottom: 48px; }
+.gk-hero__uno { display: block !important; max-width: 760px; }
+.gk-flujo { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); counter-reset: paso; }
+.gk-flujo li { counter-increment: paso; padding: 18px; border-radius: var(--gk-r-md); background: var(--gk-fondo); border: 1px solid var(--gk-linea); }
+.gk-flujo li::before { content: counter(paso, decimal-leading-zero); display: block; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .8rem; color: var(--gk-acento-texto); margin-bottom: 6px; }
+.gk-flujo strong { display: block; margin-bottom: 4px; }
+.gk-flujo span { color: var(--gk-texto-2); font-size: .92rem; }
+.gk-faq { max-width: 760px; }
+.gk-faq details { border-top: 1px solid var(--gk-linea); padding: 14px 0; }
+.gk-faq details:last-child { border-bottom: 1px solid var(--gk-linea); }
+.gk-faq summary { cursor: pointer; font-weight: 600; }
+.gk-faq details p { color: var(--gk-texto-2); margin-top: 8px; }
+
+/* ------------------------------------------------------------ plan de IA */
+.gk-uso { margin-bottom: 18px; }
+.gk-uso__barra { height: 10px; border-radius: 999px; background: var(--gk-sup-2); overflow: hidden; }
+.gk-uso__barra span { display: block; height: 100%; background: var(--gk-acento); border-radius: inherit; }
+/* min-height: la línea de texto existe aunque no haya plan, así nada salta al activarlo (regla 4). */
+.gk-uso__txt { min-height: 1.55em; margin-top: 6px; font-size: .88rem; color: var(--gk-texto-2); }
+.gk-plan-ia { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding: 16px; border-radius: var(--gk-r-md); border: 1px solid var(--gk-linea); background: var(--gk-fondo); }
+.gk-plan-ia--actual { border-color: var(--gk-acento); }
+.gk-plan-ia__precio { font-size: 1.3rem; font-weight: 800; }
+.gk-plan-ia__desc { min-height: 1.55em; font-size: .85rem; }
+.gk-plan-ia .gk-btn, .gk-plan-ia .gk-chip { margin-top: auto; }
+.gk-subtitulo { font-size: .95rem; margin: 22px 0 6px; }
+
 /* ----------------------------------------------------- movimiento reducido */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

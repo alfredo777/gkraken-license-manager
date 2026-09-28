@@ -9,6 +9,11 @@ const svc = require('../utils/licenseService');
 const { createCheckoutSession } = require('../utils/checkoutSession');
 const { PRICES, CURRENCY, featuresFor } = require('../config/features');
 const { PLAN_TYPES } = require('../utils/applyUpgrade');
+const { AiPlan, AiToken } = require('../models');
+const aiBilling = require('../utils/aiBilling');
+const { revokeDeviceTokens } = require('../utils/aiTokens');
+
+const fmtTokens = (n) => new Intl.NumberFormat('es-MX').format(Number(n) || 0);
 
 const WEB_AUTH_TTL_MS = 10 * 60 * 1000;
 const ctxFrom = (req) => { const ip = getClientIp(req); return { ip, geo: getGeoData(ip), userAgent: req.headers['user-agent'] }; };
@@ -80,6 +85,15 @@ exports.index = async (req, res) => {
   if (!license) { req.session.customer = null; return res.redirect('/cuenta/entrar'); }
   const status = svc.clientStatus(license);
   const devices = (license.devices || []).filter(d => d.is_active).map(d => d.toJSON());
+  const aiSub = await aiBilling.activeSubscription(license.id);
+  const aiPlans = (await AiPlan.findAll({ where: { enabled: true }, order: [['sort_order', 'ASC'], ['price_monthly', 'ASC']] }))
+    .map(p => ({ ...p.toJSON(), tokensLabel: fmtTokens(p.monthly_tokens), isCurrent: aiSub?.plan_id === p.id }));
+  const aiTokens = (await AiToken.findAll({ where: { license_id: license.id, revoked_at: null }, order: [['created_at', 'DESC']] })).map(t => t.toJSON());
+  const used = Number(aiSub?.tokens_used || 0); const limit = Number(aiSub?.tokens_limit || 0);
+  const ai = aiSub ? {
+    plan: aiSub.plan.name, status: aiSub.status, periodEnd: aiSub.period_end, cancelAtPeriodEnd: aiSub.cancel_at_period_end,
+    used: fmtTokens(used), limit: fmtTokens(limit), percent: limit ? Math.min(100, Math.round((used / limit) * 100)) : 0
+  } : null;
   res.render('account/index', {
     layout: 'site', title: 'Mi cuenta · Green Kraken',
     customer: req.session.customer,
@@ -94,7 +108,8 @@ exports.index = async (req, res) => {
     payments: (license.payments || []).filter(p => p.status === 'completed').map(p => p.toJSON()).sort((a, b) => new Date(b.paid_at) - new Date(a.paid_at)),
     priceMonthly: PRICES.monthly, priceAnnual: PRICES.annual, currencyCode: CURRENCY,
     canPay: !['cancelled', 'suspended'].includes(license.status),
-    paymentOk: req.query.pago === 'ok'
+    paymentOk: req.query.pago === 'ok',
+    ai, aiPlans, aiTokens, aiOk: req.query.ia === 'ok'
   });
 };
 
@@ -103,6 +118,7 @@ exports.unlinkDevice = async (req, res) => {
   const device = await Device.findOne({ where: { id: req.params.id, license_id: req.session.customer.license_id, is_active: true } });
   if (!device) { req.flash('error_msg', 'Dispositivo no encontrado.'); return res.redirect('/cuenta'); }
   await device.update({ is_active: false });
+  await revokeDeviceTokens(device.license_id, device.device_id);
   const license = await License.findByPk(req.session.customer.license_id);
   await svc.logAccess(license, 'migration', ctxFrom(req), { device_id: device.device_id });
   req.flash('success_msg', `Liberaste "${device.device_name || 'el dispositivo'}". Ya puedes iniciar sesión en otro equipo.`);
@@ -123,6 +139,44 @@ exports.upgrade = async (req, res) => {
     req.flash('error_msg', 'No se pudo iniciar el pago. Inténtalo más tarde.');
     return res.redirect('/cuenta');
   }
+};
+
+// POST /cuenta/ia/suscribir: plan mensual de IA con Stripe.
+exports.subscribeAi = async (req, res) => {
+  const plan = await AiPlan.findOne({ where: { id: Number(req.body.plan_id) || 0, enabled: true } });
+  const license = await License.findByPk(req.session.customer.license_id);
+  if (!plan || !license || ['cancelled', 'suspended'].includes(license.status)) { req.flash('error_msg', 'Ese plan no está disponible.'); return res.redirect('/cuenta#ia'); }
+  const current = await aiBilling.activeSubscription(license.id);
+  if (current && current.plan_id === plan.id && !current.cancel_at_period_end) { req.flash('error_msg', 'Ya tienes ese plan.'); return res.redirect('/cuenta#ia'); }
+  try {
+    const session = await aiBilling.createAiCheckout(license, plan, { appUrl: appUrlFrom(req) });
+    return res.redirect(303, session.url);
+  } catch (error) {
+    console.error('AI checkout error:', error.message);
+    req.flash('error_msg', 'No se pudo iniciar el pago. Inténtalo más tarde.');
+    return res.redirect('/cuenta#ia');
+  }
+};
+
+// POST /cuenta/ia/cancelar: se cancela al final del periodo ya pagado.
+exports.cancelAi = async (req, res) => {
+  const sub = await aiBilling.activeSubscription(req.session.customer.license_id);
+  if (!sub) return res.redirect('/cuenta#ia');
+  try {
+    await aiBilling.cancelAtPeriodEnd(sub);
+    req.flash('success_msg', 'Tu plan de IA se cancelará al terminar el periodo actual.');
+  } catch (error) {
+    console.error('AI cancel error:', error.message);
+    req.flash('error_msg', 'No se pudo cancelar. Inténtalo más tarde.');
+  }
+  return res.redirect('/cuenta#ia');
+};
+
+// POST /cuenta/ia/tokens/:id/revocar: desconecta la IA de un equipo.
+exports.revokeAiToken = async (req, res) => {
+  const [count] = await AiToken.update({ revoked_at: new Date() }, { where: { id: Number(req.params.id) || 0, license_id: req.session.customer.license_id, revoked_at: null } });
+  req.flash(count ? 'success_msg' : 'error_msg', count ? 'Desconectaste la IA de Green Kraken de ese equipo.' : 'No encontramos esa conexión.');
+  return res.redirect('/cuenta#ia');
 };
 
 // POST /cuenta/salir

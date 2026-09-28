@@ -12,6 +12,7 @@ const google = require('../utils/googleOAuth');
 const svc = require('../utils/licenseService');
 const { migrateDevice } = require('../utils/deviceMigration');
 const account = require('./accountController');
+const { issueToken } = require('../utils/aiTokens');
 
 const SESSION_TTL_MS = 10 * 60 * 1000;
 const MODES = ['register', 'migrate'];
@@ -108,6 +109,12 @@ exports.callback = async (req, res) => {
     const ip = getClientIp(req);
     const ctx = { ip, geo: getGeoData(ip), userAgent: req.headers['user-agent'] };
     const { license, body } = await resolveLicense(session, profile, ctx);
+    // Token de IA de este equipo (para el plan de IA de Green Kraken). Solo si el
+    // equipo quedó vinculado; viaja una sola vez en el resultado del polling.
+    if (!body.needs_migration) {
+      const device = JSON.parse(session.device_payload);
+      body.ai_token = await issueToken(license.id, device.device_id, device.device_name);
+    }
     const fresh = await svc.loadWithDevices({ id: license.id });
     await session.update({ status: 'completed', license_id: license.id, result: JSON.stringify({ ...body, license: svc.buildLicenseInfo(fresh) }) });
     return page(res, 200, true, body.needs_migration ? 'Tu licencia está en otro dispositivo; en la app podrás moverla a este.' : body.message, profile.name);

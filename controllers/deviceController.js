@@ -1,6 +1,7 @@
 const { License, Device, DeviceMigration } = require('../models');
 const { getClientIp, getGeoData } = require('../middleware/ipTracker');
 const { migrateDevice } = require('../utils/deviceMigration');
+const { revokeDeviceTokens } = require('../utils/aiTokens');
 
 exports.index = async (req, res) => {
   try {
@@ -50,6 +51,7 @@ exports.deactivate = async (req, res) => {
     const device = await Device.findByPk(req.params.id);
     if (!device) { req.flash('error_msg', 'No encontrado.'); return res.redirect('/dashboard/devices'); }
     await device.update({ is_active: false });
+    await revokeDeviceTokens(device.license_id, device.device_id);
     req.flash('success_msg', 'Dispositivo desactivado.');
     return res.redirect('/dashboard/devices');
   } catch (error) { req.flash('error_msg', 'Error.'); return res.redirect('/dashboard/devices'); }

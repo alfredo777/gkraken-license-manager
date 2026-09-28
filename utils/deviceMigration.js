@@ -3,6 +3,7 @@
 const { Device, DeviceMigration, AccessNode } = require('../models');
 const { sendMigrationNotification } = require('./mailer');
 const { deviceFieldsFrom } = require('./licenseService');
+const { revokeDeviceTokens } = require('./aiTokens');
 
 // `license` debe traer sus devices activos en `license.devices`.
 // `newDevice` usa los nombres de campo de la app (device_id, device_name, ...).
@@ -13,7 +14,7 @@ const migrateDevice = async (license, newDevice, { reason, migratedBy, ip, geo, 
     .sort((a, b) => new Date(a.last_seen || 0) - new Date(b.last_seen || 0));
   const toRemove = active.slice(0, Math.max(1, active.length - (license.max_devices || 1) + 1));
   const previous = toRemove[0];
-  for (const d of toRemove) await d.update({ is_active: false });
+  for (const d of toRemove) { await d.update({ is_active: false }); await revokeDeviceTokens(license.id, d.device_id); }
 
   const fields = deviceFieldsFrom(newDevice);
   const existing = await Device.findOne({ where: { license_id: license.id, device_id: fields.device_id } });

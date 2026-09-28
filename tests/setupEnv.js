@@ -8,3 +8,5 @@ process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_secret';
 process.env.GOOGLE_CLIENT_ID = 'test-client.apps.googleusercontent.com';
 process.env.GOOGLE_CLIENT_SECRET = 'test-google-secret';
 process.env.SUPPORT_EMAIL = 'soporte@monterlabs.test';
+process.env.AI_KEYS_MASTER_KEY = Buffer.alloc(32, 7).toString('base64');
+process.env.AI_GATEWAY_CACHE_MS = '0';

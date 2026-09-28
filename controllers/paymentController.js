@@ -1,5 +1,6 @@
 const paypal = require('paypal-rest-sdk');
-const { License, Payment, AccessNode } = require('../models');
+const { License, Payment, AccessNode, ProcessedEvent } = require('../models');
+const aiBilling = require('../utils/aiBilling');
 const { getClientIp, getGeoData } = require('../middleware/ipTracker');
 const { getStripe } = require('../utils/stripeClient');
 const { applyUpgrade, findLicense, PLAN_TYPES } = require('../utils/applyUpgrade');
@@ -51,11 +52,15 @@ exports.stripeWebhook = async (req, res) => {
   const sig = req.headers['stripe-signature'];
   let event;
   try { event = getStripe().webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET); } catch (err) { return res.status(400).send('Webhook Error: firma inválida.'); }
+  // Cada evento se aplica una sola vez aunque Stripe lo reenvíe.
+  const [, isNew] = await ProcessedEvent.findOrCreate({ where: { event_id: event.id }, defaults: { source: 'stripe' } });
+  if (!isNew) return res.json({ received: true, duplicate: true });
   try {
+    if (await aiBilling.handleStripeEvent(event)) return res.json({ received: true });
     const obj = event.data.object;
     // Checkout Session (flujo de la app) o PaymentIntent (checkout web). Los
     // PaymentIntent creados por una Checkout Session se ignoran para no duplicar.
-    const handled = event.type === 'checkout.session.completed' ? obj.payment_status === 'paid'
+    const handled = event.type === 'checkout.session.completed' ? (obj.mode !== 'subscription' && obj.payment_status === 'paid')
       : event.type === 'payment_intent.succeeded' ? obj.metadata?.source !== 'checkout' : false;
     if (handled) {
       const { plan_type, license_id } = obj.metadata || {};
@@ -69,7 +74,11 @@ exports.stripeWebhook = async (req, res) => {
         });
       }
     }
-  } catch (error) { console.error('Webhook error:', error.message); return res.status(500).json({ received: false }); }
+  } catch (error) {
+    console.error('Webhook error:', error.message);
+    await ProcessedEvent.destroy({ where: { event_id: event.id } });
+    return res.status(500).json({ received: false });
+  }
   res.json({ received: true });
 };
 

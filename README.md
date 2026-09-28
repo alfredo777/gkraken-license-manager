@@ -48,7 +48,8 @@ Este servidor es también la web pública de Green Kraken: todo lo web vive aqu�
 |------|--------|
 | `/` | Landing (funciones, planes, descargas) |
 | `/cuenta/entrar` | Entrada con Google para usuarios |
-| `/cuenta` | Mi cuenta: licencia, dispositivos (liberar equipo), pasar a PRO, pagos |
+| `/como-funciona` | Cómo funciona la app y las dos formas de usar IA (clave propia / plan de IA), modelos y planes |
+| `/cuenta` | Mi cuenta: licencia, dispositivos (liberar equipo), pasar a PRO, plan de IA, pagos |
 | `/payments/success` | Confirmación después de pagar |
 | `/admin/login`, `/dashboard` | Administración (Monter Labs) |
 
@@ -66,6 +67,62 @@ Los logos de `public/img/` son los optimizados de la cáscara web de la app (`we
 Enlaces de descarga: `DOWNLOAD_URL_WINDOWS`, `DOWNLOAD_URL_MACOS` y `DOWNLOAD_URL_LINUX`. Si una está vacía, esa plataforma muestra "Próximamente".
 
 Detrás de nginx u otro proxy, define `TRUST_PROXY=1`. Sin eso, la cookie de sesión segura no se envía y el login web no funciona en producción.
+
+## 🤖 Plan de IA de Green Kraken (gateway)
+
+Monter Labs vende acceso a IA dentro de la app: Claude, Grok, ChatGPT, Gemini, DeepSeek, Qwen… sin que el usuario tenga cuenta con cada proveedor. El usuario puede seguir usando **su propia clave**. En ese caso la app llama directo al proveedor y nada pasa por aquí.
+
+```
+App ──(token del equipo)──▶ Gateway ──(clave de Monter Labs)──▶ Proveedor
+            ▲ verifica token, plan, modelo, límites y cuota
+            ▲ descifra la clave solo para esa petición
+            ▲ reenvía la respuesta en streaming y cobra los tokens reales
+```
+
+- **Claves de los proveedores:** se guardan cifradas con AES-256-GCM (`AI_KEYS_MASTER_KEY`) en `ai_providers` y nunca llegan a la app. El panel solo muestra los últimos 4 caracteres.
+- **Token por equipo:** es `gkai_…` y se entrega una sola vez al terminar el login con Google en la app. En la base solo se guarda su hash. Se revoca al liberar o migrar el equipo, desde Mi cuenta o desde el panel. Tarda como máximo `AI_GATEWAY_CACHE_MS` en aplicar (30 s por defecto).
+- **Plan mensual en tokens:** se paga con una suscripción de Stripe desde Mi cuenta.
+  - El webhook maneja `checkout.session.completed`, `invoice.paid` (reinicia los tokens), `customer.subscription.updated` y `customer.subscription.deleted`. Suscribe esos eventos en Stripe.
+  - Cada evento se aplica una sola vez (tabla `processed_events`).
+  - Cada modelo tiene un **factor**: los tokens que descuenta del plan son los tokens reales × factor, para que los modelos caros consuman más.
+- **Formatos que acepta el gateway**, iguales a las APIs originales:
+
+  | Ruta | Proveedores | Dónde va el token |
+  |------|-------------|-------------------|
+  | `POST /v1/anthropic/messages` | Claude, vía el SDK oficial | `x-api-key` |
+  | `POST /v1/openai/:proveedor/chat/completions` | OpenAI, xAI, DeepSeek, Qwen, Mistral, Groq, Kimi | `Authorization: Bearer` |
+  | `POST /v1/gemini/models/:modelo:generateContent` | Gemini | `?key=` |
+
+  `GET /v1/models` lista lo que incluye el plan. `GET /v1/usage` devuelve el consumo del periodo.
+- **Administración:** en `/dashboard/ai` se configuran proveedores, claves (solo superadmin), modelos, costos, factor, planes, suscripciones y el reporte de costo y margen. `npm run seed:ai` crea los proveedores y los modelos de Claude. Los ids de modelo de los demás proveedores se agregan desde el panel.
+
+### Desplegar el gateway
+
+Es un proceso aparte: `npm run gateway`. Usa la misma base de datos y el mismo `.env`, pero no comparte recursos con la web.
+
+```bash
+openssl rand -base64 32          # → AI_KEYS_MASTER_KEY (el mismo valor en el gestor y en el gateway)
+GATEWAY_PORT=3100 GATEWAY_WORKERS=4 npm run gateway
+```
+
+- **Subdominio:** publícalo en uno propio, por ejemplo `https://ai.tu-dominio.com`, y compila la app con `--dart-define=AI_GATEWAY_URL=https://ai.tu-dominio.com`.
+- **nginx:** para que el streaming no se acumule en el proxy, usa `proxy_buffering off;` y `proxy_read_timeout 600s;`.
+- **Escalar:** `GATEWAY_WORKERS` levanta una copia por núcleo, y se pueden poner más máquinas detrás de un balanceador.
+  - **Límites:** los de peticiones por minuto y peticiones a la vez son por copia.
+  - **Cuota:** nunca se pasa del límite. Cada copia toma "préstamos" de tokens de la base de datos con una actualización atómica (`AI_QUOTA_LEASE_TOKENS`, 20,000 por defecto) y los gasta desde memoria. Lo que no usa lo devuelve a los `AI_QUOTA_LEASE_IDLE_MS` sin uso y al apagarse.
+- **Registro de consumo:** las filas de `ai_usage` se escriben en lotes cada `AI_USAGE_FLUSH_MS` (2 s por defecto).
+
+**Medición.** Proveedor simulado que tarda ~1.1 s por respuesta en streaming, con SQLite, en una máquina de 4 núcleos que comparten el gateway, el proveedor falso y el generador de carga:
+
+| Escenario | Primer byte (p50) | Respuesta completa (p50 / p95) |
+|-----------|-------------------|--------------------------------|
+| Directo al proveedor, 200 a la vez | 71 ms | 1.14 s / 1.14 s |
+| Gateway, 1 petición | 18 ms | 1.07 s |
+| Gateway, 1 proceso, 200 a la vez | ~280 ms | 1.33 s / 1.36 s |
+| Gateway, 3 procesos, 200 a la vez | ~160 ms | 1.16 s / 1.27 s |
+| Gateway, 3 procesos, 500 a la vez | 285 ms | 1.34 s / 1.54 s |
+
+En todas las rondas, los tokens cobrados coincidieron exactamente con el registro (1,100 peticiones, 77,000 tokens). Con PostgreSQL en producción el acceso a la base es menor todavía.
 
 ## 🐙 Green Kraken (app)
 

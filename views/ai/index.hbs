@@ -1,0 +1,119 @@
+<div class="space-y-6">
+  <div><h1 class="text-2xl font-bold text-gray-900">IA de Green Kraken</h1><p class="text-sm text-gray-500 mt-1">Proveedores, modelos y planes que se venden dentro de la app. El tráfico pasa por el gateway (<code>npm run gateway</code>).</p></div>
+  {{#unless masterKeyReady}}<div class="p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm">Falta <code>AI_KEYS_MASTER_KEY</code> en este servidor: puedes editar proveedores, pero no guardar claves de API.</div>{{/unless}}
+
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="bg-white rounded-xl border p-4"><p class="text-xs text-gray-500">Suscripciones activas</p><p class="text-2xl font-bold">{{summary.activeSubscriptions}}</p></div>
+    <div class="bg-white rounded-xl border p-4"><p class="text-xs text-gray-500">Ingreso mensual</p><p class="text-2xl font-bold">${{summary.monthlyRevenue}}</p></div>
+    <div class="bg-white rounded-xl border p-4"><p class="text-xs text-gray-500">Costo proveedores (30 días)</p><p class="text-2xl font-bold">${{summary.costUsd}}</p></div>
+    <div class="bg-white rounded-xl border p-4"><p class="text-xs text-gray-500">Margen aprox.</p><p class="text-2xl font-bold">${{summary.margin}}</p></div>
+  </div>
+
+  <section id="proveedores" class="bg-white rounded-xl border p-6">
+    <h2 class="text-lg font-semibold mb-1">Proveedores</h2>
+    <p class="text-sm text-gray-500 mb-4">La clave se guarda cifrada y nunca se vuelve a mostrar; deja el campo vacío para conservar la actual. Formato: <b>anthropic</b> (Claude), <b>openai</b> (OpenAI, Grok, DeepSeek, Qwen, Mistral…), <b>gemini</b>. URL base: Anthropic <code>https://api.anthropic.com</code>; compatibles con OpenAI terminan en <code>/v1</code> (el gateway agrega <code>/chat/completions</code>); Gemini <code>https://generativelanguage.googleapis.com/v1beta</code>.</p>
+    <div class="space-y-3">
+      {{#each providers}}
+      <form action="/dashboard/ai/providers/{{this.id}}" method="POST" class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center border rounded-lg p-3">
+        <input name="name" value="{{this.name}}" class="md:col-span-2 px-3 py-2 border rounded-lg text-sm" placeholder="Nombre">
+        <input name="slug" value="{{this.slug}}" class="md:col-span-1 px-3 py-2 border rounded-lg text-sm font-mono" placeholder="id">
+        <select name="api_format" class="md:col-span-1 px-2 py-2 border rounded-lg text-sm">{{#each ../apiFormats}}<option value="{{this}}" {{#if (eq this ../this.api_format)}}selected{{/if}}>{{this}}</option>{{/each}}</select>
+        <input name="base_url" value="{{this.base_url}}" class="md:col-span-3 px-3 py-2 border rounded-lg text-sm font-mono" placeholder="https://…">
+        <input name="api_key" type="password" autocomplete="off" class="md:col-span-2 px-3 py-2 border rounded-lg text-sm" placeholder="{{#if this.hasKey}}•••• {{this.key_last4}}{{else}}Clave de API{{/if}}">
+        <label class="md:col-span-1 text-sm flex items-center gap-1"><input type="checkbox" name="enabled" {{#if this.enabled}}checked{{/if}}> Activo</label>
+        <button class="md:col-span-2 px-3 py-2 bg-primary-600 text-white rounded-lg text-sm">Guardar</button>
+      </form>
+      {{/each}}
+      <form action="/dashboard/ai/providers" method="POST" class="grid grid-cols-1 md:grid-cols-12 gap-2 items-center border border-dashed rounded-lg p-3">
+        <input name="name" class="md:col-span-2 px-3 py-2 border rounded-lg text-sm" placeholder="Nuevo proveedor">
+        <input name="slug" class="md:col-span-1 px-3 py-2 border rounded-lg text-sm font-mono" placeholder="id">
+        <select name="api_format" class="md:col-span-1 px-2 py-2 border rounded-lg text-sm">{{#each apiFormats}}<option value="{{this}}">{{this}}</option>{{/each}}</select>
+        <input name="base_url" class="md:col-span-3 px-3 py-2 border rounded-lg text-sm font-mono" placeholder="https://…">
+        <input name="api_key" type="password" autocomplete="off" class="md:col-span-2 px-3 py-2 border rounded-lg text-sm" placeholder="Clave de API">
+        <label class="md:col-span-1 text-sm flex items-center gap-1"><input type="checkbox" name="enabled"> Activo</label>
+        <button class="md:col-span-2 px-3 py-2 bg-gray-800 text-white rounded-lg text-sm">Agregar</button>
+      </form>
+    </div>
+  </section>
+
+  <section id="modelos" class="bg-white rounded-xl border p-6">
+    <h2 class="text-lg font-semibold mb-1">Modelos</h2>
+    <p class="text-sm text-gray-500 mb-4">Costo = lo que cobra el proveedor por millón de tokens (solo para reportes). <b>Factor</b> multiplica los tokens que se descuentan del plan: úsalo para que los modelos caros consuman más. El número entre corchetes es el id que se usa en "modelos permitidos" de los planes.</p>
+    <div class="space-y-3">
+      {{#each models}}
+      <form action="/dashboard/ai/models/{{this.id}}" method="POST" class="grid grid-cols-2 md:grid-cols-12 gap-2 items-center border rounded-lg p-3 text-sm">
+        <span class="md:col-span-1 text-gray-500">[{{this.id}}]</span>
+        <select name="provider_id" class="md:col-span-2 px-2 py-2 border rounded-lg">{{#each ../providers}}<option value="{{this.id}}" {{#if (eq this.id ../this.provider_id)}}selected{{/if}}>{{this.name}}</option>{{/each}}</select>
+        <input name="model_id" value="{{this.model_id}}" class="md:col-span-2 px-3 py-2 border rounded-lg font-mono" placeholder="id del proveedor">
+        <input name="display_name" value="{{this.display_name}}" class="md:col-span-2 px-3 py-2 border rounded-lg" placeholder="Nombre visible">
+        <input name="cost_input_per_mtok" value="{{this.cost_input_per_mtok}}" class="md:col-span-1 px-2 py-2 border rounded-lg" title="Costo entrada $/M">
+        <input name="cost_output_per_mtok" value="{{this.cost_output_per_mtok}}" class="md:col-span-1 px-2 py-2 border rounded-lg" title="Costo salida $/M">
+        <input name="token_factor" value="{{this.token_factor}}" class="md:col-span-1 px-2 py-2 border rounded-lg" title="Factor">
+        <input name="max_output_tokens" value="{{this.max_output_tokens}}" class="md:col-span-1 px-2 py-2 border rounded-lg" title="Máx. salida">
+        <label class="md:col-span-1 flex items-center gap-1"><input type="checkbox" name="enabled" {{#if this.enabled}}checked{{/if}}> Activo <button class="ml-auto px-2 py-1.5 bg-primary-600 text-white rounded-lg">✓</button></label>
+      </form>
+      {{/each}}
+      <form action="/dashboard/ai/models" method="POST" class="grid grid-cols-2 md:grid-cols-12 gap-2 items-center border border-dashed rounded-lg p-3 text-sm">
+        <span class="md:col-span-1 text-gray-400">nuevo</span>
+        <select name="provider_id" class="md:col-span-2 px-2 py-2 border rounded-lg">{{#each providers}}<option value="{{this.id}}">{{this.name}}</option>{{/each}}</select>
+        <input name="model_id" class="md:col-span-2 px-3 py-2 border rounded-lg font-mono" placeholder="id del proveedor">
+        <input name="display_name" class="md:col-span-2 px-3 py-2 border rounded-lg" placeholder="Nombre visible">
+        <input name="cost_input_per_mtok" class="md:col-span-1 px-2 py-2 border rounded-lg" placeholder="$ entrada">
+        <input name="cost_output_per_mtok" class="md:col-span-1 px-2 py-2 border rounded-lg" placeholder="$ salida">
+        <input name="token_factor" value="1" class="md:col-span-1 px-2 py-2 border rounded-lg">
+        <input name="max_output_tokens" value="8192" class="md:col-span-1 px-2 py-2 border rounded-lg">
+        <label class="md:col-span-1 flex items-center gap-1"><input type="checkbox" name="enabled" checked> Activo <button class="ml-auto px-2 py-1.5 bg-gray-800 text-white rounded-lg">+</button></label>
+      </form>
+    </div>
+  </section>
+
+  <section id="planes" class="bg-white rounded-xl border p-6">
+    <h2 class="text-lg font-semibold mb-1">Planes mensuales</h2>
+    <p class="text-sm text-gray-500 mb-4">Modelos permitidos: <code>*</code> para todos, o los ids separados por coma. RPM = peticiones por minuto por equipo; "a la vez" = peticiones simultáneas.</p>
+    <div class="space-y-3">
+      {{#each plans}}
+      <form action="/dashboard/ai/plans/{{this.id}}" method="POST" class="grid grid-cols-2 md:grid-cols-12 gap-2 items-center border rounded-lg p-3 text-sm">
+        <input name="name" value="{{this.name}}" class="md:col-span-2 px-3 py-2 border rounded-lg" placeholder="Nombre">
+        <input name="slug" value="{{this.slug}}" class="md:col-span-1 px-2 py-2 border rounded-lg font-mono" placeholder="id">
+        <input name="price_monthly" value="{{this.price_monthly}}" class="md:col-span-1 px-2 py-2 border rounded-lg" title="Precio/mes">
+        <input name="monthly_tokens" value="{{this.monthly_tokens}}" class="md:col-span-2 px-2 py-2 border rounded-lg" title="Tokens/mes">
+        <input name="allowed_models" value="{{this.allowedList}}" class="md:col-span-1 px-2 py-2 border rounded-lg font-mono" title="Modelos">
+        <input name="rpm" value="{{this.rpm}}" class="md:col-span-1 px-2 py-2 border rounded-lg" title="RPM">
+        <input name="max_concurrent" value="{{this.max_concurrent}}" class="md:col-span-1 px-2 py-2 border rounded-lg" title="A la vez">
+        <input name="description" value="{{this.description}}" class="md:col-span-2 px-2 py-2 border rounded-lg" placeholder="Descripción corta">
+        <label class="md:col-span-1 flex items-center gap-1"><input type="checkbox" name="enabled" {{#if this.enabled}}checked{{/if}}> <input type="hidden" name="sort_order" value="{{this.sort_order}}"><button class="ml-auto px-2 py-1.5 bg-primary-600 text-white rounded-lg">✓</button></label>
+      </form>
+      {{/each}}
+      <form action="/dashboard/ai/plans" method="POST" class="grid grid-cols-2 md:grid-cols-12 gap-2 items-center border border-dashed rounded-lg p-3 text-sm">
+        <input name="name" class="md:col-span-2 px-3 py-2 border rounded-lg" placeholder="Nuevo plan">
+        <input name="slug" class="md:col-span-1 px-2 py-2 border rounded-lg font-mono" placeholder="id">
+        <input name="price_monthly" class="md:col-span-1 px-2 py-2 border rounded-lg" placeholder="$/mes">
+        <input name="monthly_tokens" class="md:col-span-2 px-2 py-2 border rounded-lg" placeholder="tokens/mes">
+        <input name="allowed_models" value="*" class="md:col-span-1 px-2 py-2 border rounded-lg font-mono">
+        <input name="rpm" value="30" class="md:col-span-1 px-2 py-2 border rounded-lg">
+        <input name="max_concurrent" value="3" class="md:col-span-1 px-2 py-2 border rounded-lg">
+        <input name="description" class="md:col-span-2 px-2 py-2 border rounded-lg" placeholder="Descripción corta">
+        <label class="md:col-span-1 flex items-center gap-1"><input type="checkbox" name="enabled" checked><button class="ml-auto px-2 py-1.5 bg-gray-800 text-white rounded-lg">+</button></label>
+      </form>
+    </div>
+  </section>
+
+  <section id="consumo" class="bg-white rounded-xl border p-6">
+    <h2 class="text-lg font-semibold mb-4">Consumo últimos 30 días</h2>
+    <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50 text-left text-xs text-gray-500 uppercase"><tr><th class="px-3 py-2">Modelo</th><th class="px-3 py-2">Peticiones</th><th class="px-3 py-2">Entrada</th><th class="px-3 py-2">Salida</th><th class="px-3 py-2">Tokens cobrados</th><th class="px-3 py-2">Costo USD</th></tr></thead>
+    <tbody class="divide-y">{{#each report}}<tr><td class="px-3 py-2">{{this.model}}</td><td class="px-3 py-2">{{this.requests}}</td><td class="px-3 py-2">{{this.input}}</td><td class="px-3 py-2">{{this.output}}</td><td class="px-3 py-2">{{this.billed}}</td><td class="px-3 py-2">${{this.costUsd}}</td></tr>{{else}}<tr><td colspan="6" class="px-3 py-4 text-gray-500">Sin consumo todavía.</td></tr>{{/each}}</tbody></table></div>
+  </section>
+
+  <section id="suscripciones" class="bg-white rounded-xl border p-6">
+    <h2 class="text-lg font-semibold mb-4">Suscripciones</h2>
+    <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-gray-50 text-left text-xs text-gray-500 uppercase"><tr><th class="px-3 py-2">Licencia</th><th class="px-3 py-2">Plan</th><th class="px-3 py-2">Estado</th><th class="px-3 py-2">Tokens</th><th class="px-3 py-2">Periodo hasta</th><th class="px-3 py-2">Ajustar</th></tr></thead>
+    <tbody class="divide-y">{{#each subscriptions}}<tr>
+      <td class="px-3 py-2"><a class="text-primary-600" href="/dashboard/licenses/{{this.license.id}}">{{this.license.email}}</a></td>
+      <td class="px-3 py-2">{{this.plan.name}}</td>
+      <td class="px-3 py-2">{{this.status}}{{#if this.cancel_at_period_end}} (cancela){{/if}}</td>
+      <td class="px-3 py-2">{{this.tokens_used}} / {{this.tokens_limit}}</td>
+      <td class="px-3 py-2">{{formatDate this.period_end}}</td>
+      <td class="px-3 py-2"><form action="/dashboard/ai/subscriptions/{{this.id}}/adjust" method="POST" class="flex gap-1"><input name="tokens" class="w-28 px-2 py-1 border rounded" placeholder="+50000"><button class="px-2 py-1 bg-gray-800 text-white rounded">OK</button></form></td>
+    </tr>{{else}}<tr><td colspan="6" class="px-3 py-4 text-gray-500">Aún no hay suscripciones.</td></tr>{{/each}}</tbody></table></div>
+  </section>
+</div>

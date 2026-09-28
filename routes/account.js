@@ -12,6 +12,9 @@ router.get('/entrar', loginLimiter, wrap(ctrl.loginPage));
 router.get('/', ctrl.requireCustomer, wrap(ctrl.index));
 router.post('/dispositivos/:id/desvincular', ctrl.requireCustomer, wrap(ctrl.unlinkDevice));
 router.post('/pro', ctrl.requireCustomer, wrap(ctrl.upgrade));
+router.post('/ia/suscribir', ctrl.requireCustomer, wrap(ctrl.subscribeAi));
+router.post('/ia/cancelar', ctrl.requireCustomer, wrap(ctrl.cancelAi));
+router.post('/ia/tokens/:id/revocar', ctrl.requireCustomer, wrap(ctrl.revokeAiToken));
 router.post('/salir', ctrl.logout);
 
 module.exports = router;

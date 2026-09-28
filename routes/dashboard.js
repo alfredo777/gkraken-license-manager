@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireSuperAdmin } = require('../middleware/auth');
+const aiCtrl = require('../controllers/aiAdminController');
+const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const licenseCtrl = require('../controllers/licenseController');
 const deviceCtrl = require('../controllers/deviceController');
 const paymentCtrl = require('../controllers/paymentController');
@@ -31,6 +33,15 @@ router.post('/devices/:id/deactivate', requireAuth, deviceCtrl.deactivate);
 
 router.get('/payments', requireAuth, paymentCtrl.paymentHistory);
 router.post('/payments/manual', requireAuth, paymentCtrl.manualPayment);
+
+router.get('/ai', requireAuth, wrap(aiCtrl.index));
+router.post('/ai/providers', requireAuth, requireSuperAdmin, wrap(aiCtrl.saveProvider));
+router.post('/ai/providers/:id', requireAuth, requireSuperAdmin, wrap(aiCtrl.saveProvider));
+router.post('/ai/models', requireAuth, requireSuperAdmin, wrap(aiCtrl.saveModel));
+router.post('/ai/models/:id', requireAuth, requireSuperAdmin, wrap(aiCtrl.saveModel));
+router.post('/ai/plans', requireAuth, requireSuperAdmin, wrap(aiCtrl.savePlan));
+router.post('/ai/plans/:id', requireAuth, requireSuperAdmin, wrap(aiCtrl.savePlan));
+router.post('/ai/subscriptions/:id/adjust', requireAuth, requireSuperAdmin, wrap(aiCtrl.adjustSubscription));
 
 router.get('/access-logs', requireAuth, async (req, res) => {
   try {
